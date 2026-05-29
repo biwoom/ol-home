@@ -1,0 +1,29 @@
+---
+import { url } from '../../lib/url';
+
+interface Props {
+  entity: {
+    id: string;
+    type: string;
+    name: { ko: string };
+    description?: string;
+    tags?: string[];
+  };
+}
+
+const { entity } = Astro.props;
+const href = url(`/entity/${entity.type}s/${entity.id}`);
+---
+
+<a href={href} class="ol-entity-card">
+  <span class="ol-mono-label">{entity.type}</span>
+  <h4 class="ol-kr">{entity.name.ko}</h4>
+  {entity.description && <p class="ol-kr">{entity.description}</p>}
+  {entity.tags && entity.tags.length > 0 && (
+    <div style="margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap;">
+      {entity.tags.slice(0, 3).map(tag => (
+        <span class="ol-code" style="font-size: 11px;">{tag}</span>
+      ))}
+    </div>
+  )}
+</a>

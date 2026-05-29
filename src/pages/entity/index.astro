@@ -1,0 +1,77 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import OLEntityCard from '../../components/entity/OLEntityCard.astro';
+
+const entities = await getCollection('entities', e => e.data.published);
+
+const TYPE_LABELS: Record<string, string> = {
+  person: '인물',
+  place: '장소',
+  concept: '개념',
+  text: '문헌',
+  event: '사건',
+  practice: '수행',
+  school: '학파',
+};
+
+const grouped = entities.reduce<Record<string, typeof entities>>((acc, e) => {
+  const t = e.data.type;
+  if (!acc[t]) acc[t] = [];
+  acc[t].push(e);
+  return acc;
+}, {});
+
+const typeOrder = ['person', 'concept', 'place', 'text', 'practice', 'event', 'school'];
+---
+
+<BaseLayout
+  title="OL ENTITY — 불교 지식 그래프"
+  description="OL이 정리한 불교 지식 그래프. 인물·장소·개념·문헌·사건·수행·학파."
+>
+  <main>
+    <!-- Hero -->
+    <section class="ol-hero" style="padding-bottom: 32px;">
+      <div class="ol-container">
+        <span class="ol-kicker">KNOWLEDGE GRAPH · 지식 그래프</span>
+        <h1 class="ol-kr">
+          불교 세계의 모든<br>
+          <em>인물, 장소, 개념</em>을<br>
+          연결합니다.
+        </h1>
+        <p class="ol-lead ol-kr">
+          OL ENTITY는 불교 콘텐츠를 구성하는 핵심 요소들을 구조화한 지식 그래프입니다. 각 항목은 서로 연결되어, 하나의 맥락에서 전체 불교 세계로 이어집니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- Entity groups -->
+    {typeOrder.filter(t => grouped[t]?.length > 0).map(type => (
+      <section class="ol-section-tight">
+        <div class="ol-container">
+          <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px;">
+            <h2 style="font-size: 20px; letter-spacing: -0.02em;" class="ol-kr">
+              {TYPE_LABELS[type] ?? type}
+            </h2>
+            <span style="font-family: var(--ol-font-mono); font-size: 11px; color: var(--ol-muted);">
+              {type.toUpperCase()} · {grouped[type].length}
+            </span>
+          </div>
+          <div class="ol-grid-4">
+            {grouped[type].map(entity => (
+              <OLEntityCard entity={entity.data} />
+            ))}
+          </div>
+        </div>
+      </section>
+    ))}
+
+    {entities.length === 0 && (
+      <section class="ol-section">
+        <div class="ol-container" style="text-align: center; color: var(--ol-muted); font-family: var(--ol-font-mono); font-size: 13px; padding: 80px 0;">
+          아직 등록된 항목이 없습니다.
+        </div>
+      </section>
+    )}
+  </main>
+</BaseLayout>

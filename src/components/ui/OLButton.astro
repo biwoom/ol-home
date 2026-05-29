@@ -1,0 +1,25 @@
+---
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'accent' | 'outline' | 'ghost';
+  size?: 'default' | 'sm';
+  class?: string;
+  target?: string;
+  rel?: string;
+}
+
+const { href, variant = 'outline', size = 'default', class: className, target, rel } = Astro.props;
+const classes = [
+  'ol-btn',
+  variant === 'primary' ? 'ol-btn-primary' : '',
+  variant === 'accent' ? 'ol-btn-accent' : '',
+  variant === 'outline' ? 'ol-btn-outline' : '',
+  variant === 'ghost' ? 'ol-btn-ghost' : '',
+  size === 'sm' ? 'ol-btn-sm' : '',
+  className ?? '',
+].filter(Boolean).join(' ');
+---
+{href
+  ? <a href={href} class={classes} target={target} rel={rel}><slot /></a>
+  : <button class={classes}><slot /></button>
+}

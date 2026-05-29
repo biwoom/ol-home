@@ -1,0 +1,104 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { url } from '../../lib/url';
+
+const posts = await getCollection('blog', e => e.data.published);
+posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<BaseLayout
+  title="OL BLOG — 작업 일지"
+  description="OL의 결정 기록. 무엇을 고쳤고, 무엇을 포기했고, 무엇을 다음으로 미뤘는지."
+>
+  <main>
+    <!-- Hero -->
+    <section class="ol-hero" style="padding-bottom: 32px;">
+      <div class="ol-container">
+        <span class="ol-kicker">JOURNAL · 작업 일지</span>
+        <h1 class="ol-kr">
+          만들고 고친 자취를<br>
+          <em>그대로</em> 적어둡니다.
+        </h1>
+        <p class="ol-lead ol-kr">
+          OL BLOG는 결과물의 광고가 아니라, 결정의 기록입니다. 무엇을 고쳤고, 무엇을 포기했고, 무엇을 다음으로 미뤘는지 — 누군가 비슷한 일을 시작할 때 참고가 되도록.
+        </p>
+      </div>
+    </section>
+
+    <!-- Filter + posts -->
+    <section class="ol-section-tight">
+      <div class="ol-container">
+        <div class="ol-row" style="margin-bottom: 16px;">
+          <div class="ol-chips">
+            <button class="ol-chip active">전체 <span class="count">{posts.length}</span></button>
+            <button class="ol-chip">ATLAS</button>
+            <button class="ol-chip">BOOK</button>
+            <button class="ol-chip">DESIGN</button>
+            <button class="ol-chip">AI</button>
+            <button class="ol-chip">회고</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 280px; gap: 48px; align-items: start;">
+          <div>
+            {posts.length === 0 ? (
+              <div style="padding: 48px 0; color: var(--ol-muted); font-family: var(--ol-font-mono); font-size: 13px;">
+                아직 발행된 글이 없습니다.
+              </div>
+            ) : posts.map(post => (
+              <article class="ol-post">
+                <div>
+                  <div class="when">{post.data.date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, ' · ').replace('.', '')}</div>
+                  {post.data.category && (
+                    <span class="ol-badge" style="margin-top: 8px;">{post.data.category}</span>
+                  )}
+                  <div style="margin-top: 14px;">
+                    <div class="ol-ph" style="aspect-ratio: 4/3; font-size: 11px;">{post.data.title.toUpperCase()}</div>
+                  </div>
+                </div>
+                <div>
+                  <h3 class="ol-kr">{post.data.title}</h3>
+                  <p class="ol-kr">{post.data.description}</p>
+                  {post.data.readingTime && (
+                    <div class="meta"><span>{post.data.readingTime}분 읽기</span></div>
+                  )}
+                  <a class="read" href={url(`/blog/${post.id}`)}>전문 읽기 →</a>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <!-- Sidebar -->
+          <aside style="position: sticky; top: 80px;">
+            <div class="ol-card" style="padding: 24px;">
+              <div class="ol-mono-label">ARCHIVE</div>
+              <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--ol-ink-2);">
+                <div style="display: flex; justify-content: space-between;">
+                  <span class="ol-kr">2026년</span>
+                  <span style="font-family: var(--ol-font-mono); color: var(--ol-muted);">
+                    {posts.filter(p => p.data.date.getFullYear() === 2026).length}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span class="ol-kr">2025년</span>
+                  <span style="font-family: var(--ol-font-mono); color: var(--ol-muted);">
+                    {posts.filter(p => p.data.date.getFullYear() === 2025).length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ol-card" style="margin-top: 16px; padding: 24px;">
+              <div class="ol-mono-label">RSS</div>
+              <p style="margin-top: 8px; font-size: 13px; color: var(--ol-muted); line-height: 1.6;" class="ol-kr">
+                피드 리더로 구독하려면 RSS를 사용하세요.
+              </p>
+              <a href={url('/rss.xml')} class="ol-btn ol-btn-outline" style="margin-top: 12px; font-size: 12px;">RSS 피드</a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

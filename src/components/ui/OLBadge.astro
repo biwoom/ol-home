@@ -1,0 +1,15 @@
+---
+interface Props {
+  variant?: 'default' | 'accent' | 'dot';
+  class?: string;
+}
+
+const { variant = 'default', class: className } = Astro.props;
+const classes = [
+  'ol-badge',
+  variant === 'accent' ? 'ol-badge-accent' : '',
+  variant === 'dot' ? 'ol-badge-dot' : '',
+  className ?? '',
+].filter(Boolean).join(' ');
+---
+<span class={classes}><slot /></span>

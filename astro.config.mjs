@@ -1,5 +1,19 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import tailwindcss from '@tailwindcss/vite';
 
-// https://astro.build/config
-export default defineConfig({});
+import mdx from '@astrojs/mdx';
+
+export default defineConfig({
+  // GitHub Pages URL
+  site: 'https://biwoom.github.io',
+
+  // 저장소 이름
+  base: '/ol-home',
+
+  vite: {
+    plugins: [tailwindcss()],
+  },
+
+  integrations: [mdx()],
+});

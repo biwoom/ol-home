@@ -1,0 +1,62 @@
+---
+import { getCollection, render } from 'astro:content';
+import EntityLayout from '../../../layouts/EntityLayout.astro';
+import OLEntityPanel from '../../../components/entity/OLEntityPanel.astro';
+import OLRelationLinks from '../../../components/entity/OLRelationLinks.astro';
+import { getEntityRelations, getBacklinks } from '../../../lib/relations';
+
+export async function getStaticPaths() {
+  const entities = await getCollection('entities', e => e.data.published);
+  return entities.map(entry => ({
+    params: {
+      type: entry.data.type + 's',
+      id: entry.data.id,
+    },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+const entities = await getCollection('entities', e => e.data.published);
+const allRelations = entities.flatMap(e => e.data.relations ?? []);
+
+const outgoing = getEntityRelations(entry.data.id, allRelations);
+const backlinks = getBacklinks(entry.data.id, allRelations);
+---
+
+<EntityLayout title={`${entry.data.name.ko} — OL ENTITY`}>
+  <div style="display: grid; grid-template-columns: 1fr 300px; gap: 48px; align-items: start;">
+    <article>
+      <header style="margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--ol-border);">
+        <span class="ol-mono-label">{entry.data.type.toUpperCase()}</span>
+        <h1 style="font-size: 36px; margin-top: 8px; letter-spacing: -0.03em;" class="ol-kr">
+          {entry.data.name.ko}
+        </h1>
+        {entry.data.name.en && (
+          <div style="margin-top: 6px; font-family: var(--ol-font-mono); font-size: 13px; color: var(--ol-muted);">
+            {entry.data.name.en}
+            {entry.data.name.sanskrit && ` · Skt. ${entry.data.name.sanskrit}`}
+            {entry.data.name.pali && ` · Pāli ${entry.data.name.pali}`}
+          </div>
+        )}
+      </header>
+
+      <div class="ol-prose">
+        <Content />
+      </div>
+
+      {outgoing.length > 0 && (
+        <OLRelationLinks title="관계" relations={outgoing} direction="outgoing" />
+      )}
+      {backlinks.length > 0 && (
+        <OLRelationLinks title="역참조" relations={backlinks} direction="incoming" />
+      )}
+    </article>
+
+    <aside style="position: sticky; top: 80px;">
+      <OLEntityPanel entity={entry.data} />
+    </aside>
+  </div>
+</EntityLayout>

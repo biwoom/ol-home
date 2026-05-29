@@ -1,0 +1,50 @@
+---
+interface Props {
+  entity: {
+    id: string;
+    type: string;
+    name: { ko: string; en?: string; pali?: string; sanskrit?: string; chinese?: string };
+    aliases?: string[];
+    description?: string;
+    tags?: string[];
+  };
+}
+
+const { entity } = Astro.props;
+const names = [entity.name.en, entity.name.sanskrit, entity.name.pali, entity.name.chinese].filter(Boolean);
+---
+
+<aside class="ol-card" style="position: sticky; top: 88px;">
+  <div class="ol-mono-label">{entity.type.toUpperCase()}</div>
+  <h2 style="font-size: 22px; margin-top: 8px;" class="ol-kr">{entity.name.ko}</h2>
+
+  {names.length > 0 && (
+    <p style="color: var(--ol-muted); font-size: 13px; margin-top: 4px; font-family: var(--ol-font-mono);">
+      {names.join(' · ')}
+    </p>
+  )}
+
+  {entity.aliases && entity.aliases.length > 0 && (
+    <div style="margin-top: 12px;">
+      <div class="ol-mono-label" style="margin-bottom: 4px;">별칭</div>
+      <p style="font-size: 13px; color: var(--ol-ink-2);">{entity.aliases.join(', ')}</p>
+    </div>
+  )}
+
+  {entity.description && (
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--ol-border);">
+      <p style="font-size: 14px; color: var(--ol-ink-2); line-height: 1.65;" class="ol-kr">{entity.description}</p>
+    </div>
+  )}
+
+  {entity.tags && entity.tags.length > 0 && (
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--ol-border);">
+      <div class="ol-mono-label" style="margin-bottom: 8px;">태그</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+        {entity.tags.map(tag => (
+          <span class="ol-code">{tag}</span>
+        ))}
+      </div>
+    </div>
+  )}
+</aside>

@@ -1,0 +1,20 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <main class="ol-page-main">
+    <div class="ol-section">
+      <div class="ol-container">
+        <slot />
+      </div>
+    </div>
+  </main>
+</BaseLayout>

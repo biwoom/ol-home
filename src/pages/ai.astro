@@ -1,0 +1,148 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="OL AI — 불교 로컬 AI 구상"
+  description="OL의 콘텐츠를 학습 데이터로 삼아, 사용자의 컴퓨터 안에서 동작하는 작은 불교 AI 모델 구상."
+>
+  <main>
+    <!-- Hero -->
+    <section class="ol-hero">
+      <div class="ol-container">
+        <span class="ol-kicker">R&D · 장래 개발 구상 · 2026 —</span>
+        <h1 class="ol-kr">
+          <em>지혜와 자비로</em><br>
+          정렬된, 작고 로컬한<br>
+          불교 AI 모델.
+        </h1>
+        <p class="ol-lead ol-kr">
+          OL AI는 OL의 콘텐츠를 학습 데이터로 삼아, 사용자의 컴퓨터 안에서 동작하는 작은 모델을 만드는 일을 말합니다. 가르치고 답하기 위해서가 아니라, 함께 읽고 함께 묻기 위해서.
+        </p>
+        <div class="ol-hero-actions">
+          <a class="ol-btn ol-btn-accent">로드맵 보기</a>
+          <a class="ol-btn ol-btn-outline">RFC · 설계 노트</a>
+        </div>
+        <div style="margin-top: 24px;">
+          <span class="ol-badge ol-badge-accent ol-badge-dot ol-kr">현재 단계 · CONCEPT — 구상</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Principles -->
+    <section class="ol-section">
+      <div class="ol-container">
+        <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 64px;">
+          <div>
+            <span class="ol-kicker">PRINCIPLES</span>
+            <h2 style="font-size: 30px; margin-top: 12px; letter-spacing: -0.025em;" class="ol-kr">네 가지 약속</h2>
+            <p style="color: var(--ol-muted); margin-top: 14px; font-size: 14.5px; line-height: 1.7;" class="ol-kr">
+              아직 모델이 만들어지지 않았지만, 모델이 무엇이어야 하고 무엇이 아니어야 하는지는 먼저 적어둡니다.
+            </p>
+          </div>
+
+          <div>
+            <div class="ol-principle">
+              <div class="num">壹</div>
+              <div>
+                <h4 class="ol-kr">로컬 우선 · Local-first</h4>
+                <p class="ol-kr">모든 추론은 사용자의 기기 안에서 일어납니다. 질문도, 답도 외부로 나가지 않습니다. 모델은 작아야 하고, 작아야 하기에 정직해야 합니다.</p>
+              </div>
+            </div>
+            <div class="ol-principle">
+              <div class="num">貳</div>
+              <div>
+                <h4 class="ol-kr">정렬은 지혜와 자비로</h4>
+                <p class="ol-kr">"무엇을 말하지 않을지"를 정하는 가치 함수는, 불교 텍스트가 일관되게 가리키는 두 축 — 지혜와 자비 — 에 기반합니다. 잘 모를 때는 모른다고 말합니다.</p>
+              </div>
+            </div>
+            <div class="ol-principle">
+              <div class="num">參</div>
+              <div>
+                <h4 class="ol-kr">가르치지 않는 모델</h4>
+                <p class="ol-kr">교리를 단정해 알려주는 도구가 아닙니다. 사용자가 어떤 구절을 읽다가 막혔을 때, 그 구절과 관련된 다른 구절·주석·맥락을 함께 보여줍니다.</p>
+              </div>
+            </div>
+            <div class="ol-principle">
+              <div class="num">肆</div>
+              <div>
+                <h4 class="ol-kr">데이터의 출처를 끝까지 따라간다</h4>
+                <p class="ol-kr">모델이 인용한 모든 문장은 OL BOOK 또는 DESIGN 안의 원본 위치로 되짚어갈 수 있어야 합니다. 추적 불가능한 답은 답이 아닙니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Roadmap -->
+    <section class="ol-section" style="background: var(--ol-surface); border-top: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border);">
+      <div class="ol-container">
+        <span class="ol-kicker">ROADMAP · 진행 단계</span>
+        <h2 style="font-size: 30px; margin-top: 12px; letter-spacing: -0.025em;" class="ol-kr">서두르지 않습니다.</h2>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 36px;">
+          <div class="ol-timeline">
+            <div class="ol-timeline-item now">
+              <div class="when">2026 Q2 · NOW</div>
+              <h4 class="ol-kr">데이터 정리 단계</h4>
+              <p class="ol-kr">OL BOOK과 DESIGN의 자료를 학습 가능한 구조로 정리. 인용 가능한 단위(節)별로 분할.</p>
+            </div>
+            <div class="ol-timeline-item">
+              <div class="when">2026 Q4</div>
+              <h4 class="ol-kr">소형 임베딩 + 검색</h4>
+              <p class="ol-kr">OL 데이터 안에서의 의미 검색. 모델 없이도 "관련 구절 찾기"가 가능하도록.</p>
+            </div>
+            <div class="ol-timeline-item">
+              <div class="when">2027 H1</div>
+              <h4 class="ol-kr">7B 이하 SLM 파인튜닝</h4>
+              <p class="ol-kr">공개 오픈 모델 베이스 위에, OL 코퍼스로 파인튜닝. 응답이 아닌 안내에 최적화.</p>
+            </div>
+            <div class="ol-timeline-item">
+              <div class="when">2027 H2</div>
+              <h4 class="ol-kr">ATLAS와 통합</h4>
+              <p class="ol-kr">ATLAS 안의 콘텐츠를 읽다가, 같은 창에서 모델에게 문맥 질의 가능.</p>
+            </div>
+            <div class="ol-timeline-item">
+              <div class="when">미정</div>
+              <h4 class="ol-kr">자가 정렬 평가 도구</h4>
+              <p class="ol-kr">모델의 답이 "지혜·자비"에서 얼마나 벗어났는지 평가하는 공개 벤치마크.</p>
+            </div>
+          </div>
+
+          <!-- Concept preview -->
+          <div>
+            <div class="ol-card" style="padding: 0; overflow: hidden; background: var(--ol-surface-3, var(--ol-surface-2));">
+              <div style="padding: 12px 16px; border-bottom: 1px solid var(--ol-border); font-family: var(--ol-font-mono); font-size: 11.5px; color: var(--ol-muted); display: flex; align-items: center; gap: 8px;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--ol-ink);"></span>
+                OL AI · CONCEPT PREVIEW · v0.0
+              </div>
+              <div style="padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="align-self: flex-end; max-width: 80%; background: var(--ol-ink); color: var(--ol-bg); padding: 10px 14px; border-radius: 14px 14px 4px 14px; font-size: 13.5px; line-height: 1.55;" class="ol-kr">
+                  《담마빠다》 1장 1게의 "마음이 모든 것에 앞선다"는 게송, 다른 경전에서 비슷한 표현이 어디 더 있어요?
+                </div>
+                <div style="align-self: flex-start; max-width: 90%; background: var(--ol-surface-2); color: var(--ol-ink); padding: 12px 14px; border-radius: 14px 14px 14px 4px; font-size: 13.5px; line-height: 1.6; border: 1px solid var(--ol-border);" class="ol-kr">
+                  관련 구절을 OL BOOK 안에서 세 군데 찾았습니다:<br><br>
+                  · <strong>맛지마니까야 19경</strong> · "두 갈래 사유" — 마음이 향하는 방향에 대한 비유<br>
+                  · <strong>잡아함 267</strong> · "심전유종"<br>
+                  · <strong>화엄경 보살문명품</strong> · "삼계는 오직 마음이 짓는 것"<br><br>
+                  <span style="font-family: var(--ol-font-mono); font-size: 11px; opacity: 0.7;">→ 각 출처는 ATLAS에서 바로 열 수 있습니다.</span>
+                </div>
+                <div style="border-top: 1px dashed var(--ol-border); padding-top: 12px; font-family: var(--ol-font-mono); font-size: 10.5px; color: var(--ol-muted); letter-spacing: 0.06em;" class="ol-kr">
+                  CONCEPT MOCK · 실제 모델 아님. 응답 형식과 어조의 예시.
+                </div>
+              </div>
+            </div>
+
+            <div class="ol-card" style="margin-top: 16px; background: var(--ol-surface-2); border-color: var(--ol-border);">
+              <div class="ol-mono-label">NOTE</div>
+              <p style="margin-top: 8px; font-size: 13.5px; color: var(--ol-ink-2); line-height: 1.65;" class="ol-kr">
+                OL AI는 다른 모든 OL 프로젝트와 다르게, 결과물보다 <strong>만들지 않는 결정</strong>이 더 중요합니다. 만들 수 있다고 만드는 것이 아니라, 만들 만한 이유가 갖춰졌을 때 만듭니다.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

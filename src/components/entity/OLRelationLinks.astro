@@ -1,0 +1,35 @@
+---
+import type { Triple } from '../../lib/relations';
+import { url } from '../../lib/url';
+
+interface Props {
+  title: string;
+  relations: Triple[];
+  direction: 'outgoing' | 'incoming';
+}
+
+const { title, relations, direction } = Astro.props;
+---
+
+<section class="ol-relation-links">
+  <h2 class="ol-mono-label">{title} ({relations.length})</h2>
+  <ul>
+    {relations.map(rel => (
+      <li>
+        <span class="ol-relation-predicate">{rel.predicate}</span>
+        {direction === 'outgoing' ? (
+          <a href={url(`/entity/${rel.object}`)} style="color: var(--ol-ink); text-decoration: none; border-bottom: 1px solid var(--ol-border);">
+            {rel.object}
+          </a>
+        ) : (
+          <a href={url(`/entity/${rel.subject}`)} style="color: var(--ol-ink); text-decoration: none; border-bottom: 1px solid var(--ol-border);">
+            {rel.subject}
+          </a>
+        )}
+        {rel.note && (
+          <span style="color: var(--ol-muted); font-size: 12px;">— {rel.note}</span>
+        )}
+      </li>
+    ))}
+  </ul>
+</section>

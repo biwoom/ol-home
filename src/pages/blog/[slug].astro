@@ -1,0 +1,46 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { url } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', e => e.data.published);
+  return posts.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<BaseLayout
+  title={`${entry.data.title} — OL BLOG`}
+  description={entry.data.description}
+>
+  <main>
+    <section class="ol-section">
+      <div class="ol-container" style="max-width: 720px;">
+        <header style="margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--ol-border);">
+          {entry.data.category && (
+            <span class="ol-badge">{entry.data.category}</span>
+          )}
+          <h1 style="font-size: 36px; margin-top: 12px; letter-spacing: -0.03em;" class="ol-kr">
+            {entry.data.title}
+          </h1>
+          <div style="margin-top: 12px; font-family: var(--ol-font-mono); font-size: 12px; color: var(--ol-muted); display: flex; gap: 12px;">
+            <span>{entry.data.date.toLocaleDateString('ko-KR')}</span>
+            {entry.data.readingTime && <span>· {entry.data.readingTime}분 읽기</span>}
+          </div>
+        </header>
+        <div class="ol-prose">
+          <Content />
+        </div>
+        <footer style="margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--ol-border);">
+          <a href={url('/blog')} style="font-family: var(--ol-font-mono); font-size: 12.5px; color: var(--ol-muted); text-decoration: none;">← 목록으로</a>
+        </footer>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

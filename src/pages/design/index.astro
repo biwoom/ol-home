@@ -1,0 +1,134 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="OL DESIGN — 불교 콘텐츠 스타일 레퍼런스"
+  description="불교 콘텐츠를 위한 스타일 레퍼런스 — 인물·복장·건물·지역환경·원문 데이터. 모두 CC0."
+>
+  <main>
+    <!-- Hero -->
+    <section class="ol-hero">
+      <div class="ol-container">
+        <span class="ol-kicker">ARCHIVE · 스타일 레퍼런스 · CC0</span>
+        <h1 class="ol-kr">
+          불교 콘텐츠를 만드는 모두를 위한<br>
+          <em>스타일 레퍼런스</em> 아카이브.
+        </h1>
+        <p class="ol-lead ol-kr">
+          승복 한 벌의 색, 한 절의 처마 비례, 고대 인도 도시의 평면 — 불교 콘텐츠를 만들 때 매번 처음부터 조사해야 했던 자료들을 모으고 정리합니다. 모든 자료는 CC0 또는 공개 도메인입니다.
+        </p>
+        <div class="ol-hero-actions">
+          <a class="ol-btn ol-btn-accent">전체 아카이브 둘러보기</a>
+          <a class="ol-btn ol-btn-outline">기여 가이드</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category nav -->
+    <section class="ol-section-tight">
+      <div class="ol-container">
+        <div class="ol-cat-nav">
+          <button class="active">
+            <span class="ct-name ol-kr">전체</span>
+            <span class="ct-count">1,240</span>
+          </button>
+          <button>
+            <span class="ct-name ol-kr">인물 · 도상</span>
+            <span class="ct-count">312</span>
+          </button>
+          <button>
+            <span class="ct-name ol-kr">복장 · 가사</span>
+            <span class="ct-count">186</span>
+          </button>
+          <button>
+            <span class="ct-name ol-kr">건축 · 사찰</span>
+            <span class="ct-count">244</span>
+          </button>
+          <button>
+            <span class="ct-name ol-kr">지역 · 자연</span>
+            <span class="ct-count">198</span>
+          </button>
+          <button>
+            <span class="ct-name ol-kr">원문 데이터</span>
+            <span class="ct-count">300</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Asset grid -->
+    <section class="ol-section-tight">
+      <div class="ol-container">
+        <div class="ol-grid-4">
+          <a class="ol-asset"><div class="visual ol-ph" style="aspect-ratio: 4/3;">PORTRAIT · 釋迦</div><div class="meta"><h4 class="ol-kr">석가모니 — 간다라형</h4><div class="sub">PORTRAIT · 1C — 5C</div></div></a>
+          <a class="ol-asset"><div class="visual ol-ph" style="aspect-ratio: 4/3;">ROBE · 三衣</div><div class="meta"><h4 class="ol-kr">삼의 — 인도 원형</h4><div class="sub">ROBE · MATERIAL CHART</div></div></a>
+          <a class="ol-asset"><div class="visual ol-ph" style="aspect-ratio: 4/3;">TEMPLE · 大雄殿</div><div class="meta"><h4 class="ol-kr">대웅전 평면 · 조선후기</h4><div class="sub">PLAN · 5칸 × 3칸</div></div></a>
+          <a class="ol-asset"><div class="visual ol-ph" style="aspect-ratio: 4/3;">LANDSCAPE · 雪山</div><div class="meta"><h4 class="ol-kr">설산 · 히말라야 단면</h4><div class="sub">ENV · 컬러팔레트 + 형태</div></div></a>
+          <a class="ol-asset"><div class="visual ol-ph" style="aspect-ratio: 4/3;">BODHISATTVA · 觀音</div><div class="meta"><h4 class="ol-kr">관세음보살 — 11면관음</h4><div class="sub">PORTRAIT · 변화관음 도식</div></div></a>
+          <a class="ol-asset"><div class="visual ol-ph" style="aspect-ratio: 4/3;">ROBE · 袈裟</div><div class="meta"><h4 class="ol-kr">가사 색상표 · 7류</h4><div class="sub">PALETTE · 율장 기준</div></div></a>
+          <a class="ol-asset"><div class="visual ol-ph" style="aspect-ratio: 4/3;">STUPA · 桑奇</div><div class="meta"><h4 class="ol-kr">산치 대탑 입면</h4><div class="sub">ARCH · 기원전 3C</div></div></a>
+          <a class="ol-asset"><div class="visual ol-ph" style="aspect-ratio: 4/3;">MAP · 西域</div><div class="meta"><h4 class="ol-kr">서역 지역도 · 현장 노정</h4><div class="sub">MAP · 7C 추정</div></div></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured collection: 가사 색상 -->
+    <section class="ol-section">
+      <div class="ol-container">
+        <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px;">
+          <div>
+            <span class="ol-kicker">FEATURED COLLECTION</span>
+            <h2 style="font-size: 32px; margin-top: 12px; letter-spacing: -0.025em;" class="ol-kr">가사 색상 — 율장 기준 7류</h2>
+            <p style="color: var(--ol-ink-2); margin-top: 14px; line-height: 1.7;" class="ol-kr">
+              《마하박가》와 한역 율장에 등장하는 가사의 색은 일곱 가지 — 흙·물푸레·붉은흙·황·청·검정·매저(梅楮). 각 색의 안료 출처, 현대 색 좌표(LAB), 그리고 박물관 유물에서 채취한 실제 표본 색상까지 정리되어 있습니다.
+            </p>
+
+            <!-- Palette swatches -->
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 24px;">
+              <div><div style="aspect-ratio: 1; border-radius: 6px; background: #8a6b4a; border: 1px solid var(--ol-border);"></div><div class="ol-mono-label" style="margin-top: 6px; font-size: 10px; text-align: center;">土 · KASA1</div></div>
+              <div><div style="aspect-ratio: 1; border-radius: 6px; background: #6a7152; border: 1px solid var(--ol-border);"></div><div class="ol-mono-label" style="margin-top: 6px; font-size: 10px; text-align: center;">青 · KASA2</div></div>
+              <div><div style="aspect-ratio: 1; border-radius: 6px; background: #a85a3b; border: 1px solid var(--ol-border);"></div><div class="ol-mono-label" style="margin-top: 6px; font-size: 10px; text-align: center;">朱 · KASA3</div></div>
+              <div><div style="aspect-ratio: 1; border-radius: 6px; background: #b89455; border: 1px solid var(--ol-border);"></div><div class="ol-mono-label" style="margin-top: 6px; font-size: 10px; text-align: center;">黄 · KASA4</div></div>
+              <div><div style="aspect-ratio: 1; border-radius: 6px; background: #3b3a36; border: 1px solid var(--ol-border);"></div><div class="ol-mono-label" style="margin-top: 6px; font-size: 10px; text-align: center;">黒 · KASA5</div></div>
+              <div><div style="aspect-ratio: 1; border-radius: 6px; background: #7a3e3a; border: 1px solid var(--ol-border);"></div><div class="ol-mono-label" style="margin-top: 6px; font-size: 10px; text-align: center;">梅 · KASA6</div></div>
+              <div><div style="aspect-ratio: 1; border-radius: 6px; background: #5b4f3a; border: 1px solid var(--ol-border);"></div><div class="ol-mono-label" style="margin-top: 6px; font-size: 10px; text-align: center;">楮 · KASA7</div></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 32px;">
+              <a class="ol-btn ol-btn-accent">PNG + ASE 묶음 받기</a>
+              <a class="ol-btn ol-btn-outline">색상 데이터 (JSON)</a>
+            </div>
+          </div>
+
+          <div>
+            <div class="ol-ph" style="aspect-ratio: 4/5; font-size: 14px; letter-spacing: 0.05em;">
+              <div style="text-align: center; line-height: 1.8;" class="ol-kr">
+                가사 표본 시트<br>
+                <span style="font-size: 10px; letter-spacing: 0.08em;">SWATCH SHEET · A4</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CC0 callout -->
+    <section class="ol-section-tight">
+      <div class="ol-container">
+        <div class="ol-card" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 32px; padding: 32px;">
+          <div>
+            <div style="font-size: 44px; font-weight: 500; letter-spacing: -0.03em; color: var(--ol-ink);">CC0</div>
+            <div class="ol-mono-label" style="margin-top: 4px;">PUBLIC DOMAIN DEDICATION</div>
+          </div>
+          <div>
+            <h4 style="font-size: 16px;" class="ol-kr">출처 표기 없이도, 상업적으로도, 변형해서도 사용할 수 있습니다.</h4>
+            <p style="color: var(--ol-muted); margin-top: 8px; font-size: 13.5px; line-height: 1.7;" class="ol-kr">
+              OL DESIGN의 모든 자료는 CC0 또는 공개 도메인입니다. 영상·게임·책·강의 등 어떤 결과물에든 자유롭게 쓰세요. 다만 박물관 출처 자료는 별도 출처가 함께 기재되어 있으니 학술 인용 시 참고해 주세요.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
