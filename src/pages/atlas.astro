@@ -40,69 +40,110 @@ import { url } from '../lib/url';
       </div>
     </section>
 
-    <!-- ATLAS 미리보기 모의 창 -->
+    <!-- ATLAS 실제 툴 미리보기 (iframe + 탭 전환) -->
     <section class="ol-section-tight">
       <div class="ol-container">
-        <div class="ol-card ol-card-flush" style="border-color: var(--ol-border-strong);">
-          <!-- Title bar -->
-          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--ol-surface-2); border-bottom: 1px solid var(--ol-border);">
-            <div style="display: flex; gap: 6px;">
-              <span style="width: 11px; height: 11px; border-radius: 50%; background: #d4d4d4; display: inline-block;"></span>
-              <span style="width: 11px; height: 11px; border-radius: 50%; background: #d4d4d4; display: inline-block;"></span>
-              <span style="width: 11px; height: 11px; border-radius: 50%; background: #d4d4d4; display: inline-block;"></span>
+        <div class="ol-card ol-card-flush" style="border-color: var(--ol-border-strong);" id="atlas-preview-card">
+
+          <!-- 브라우저 크롬: 신호등 + 탭 + 열기 버튼 -->
+          <div class="atlas-chrome">
+            <!-- 신호등 -->
+            <div class="atlas-chrome-dots">
+              <span style="background: #ff5f57;"></span>
+              <span style="background: #febc2e;"></span>
+              <span style="background: #28c840;"></span>
             </div>
-            <div style="font-family: var(--ol-font-mono); font-size: 11.5px; color: var(--ol-muted);">atlas-buddha-story.html — OL ATLAS v0.4.2</div>
-            <div class="ol-spacer"></div>
-            <span class="ol-badge">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ol-ink);"></span>
-              저장됨
-            </span>
+
+            <!-- 탭 -->
+            <div class="atlas-tabs" role="tablist">
+              <button
+                class="atlas-tab active"
+                role="tab"
+                aria-selected="true"
+                data-tab="home"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                홈
+              </button>
+              <button
+                class="atlas-tab"
+                role="tab"
+                aria-selected="false"
+                data-tab="kanban"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="7" height="18" x="3" y="3" rx="1"/>
+                  <rect width="7" height="18" x="14" y="3" rx="1"/>
+                </svg>
+                칸반
+              </button>
+            </div>
+
+            <!-- 열기 버튼 -->
+            <a
+              href={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html')}
+              id="atlas-open-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="atlas-open-btn"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              열기
+            </a>
           </div>
-          <!-- Body -->
-          <div style="display: grid; grid-template-columns: 220px 1fr 280px; height: 380px; font-family: var(--ol-font-mono); font-size: 12px; overflow: hidden;">
-            <!-- Sidebar -->
-            <aside style="border-right: 1px solid var(--ol-border); padding: 14px; background: var(--ol-surface-3);">
-              <div style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ol-muted); margin-bottom: 10px;">OUTLINE</div>
-              <div style="padding: 6px 10px; background: var(--ol-ink); color: var(--ol-bg); border-radius: 6px; font-weight: 500;" class="ol-kr">§ 1. 도솔천에서</div>
-              <div style="padding: 6px 10px; color: var(--ol-ink-2);" class="ol-kr">§ 2. 룸비니의 탄생</div>
-              <div style="padding: 6px 10px; color: var(--ol-ink-2);" class="ol-kr">§ 3. 사문유관</div>
-              <div style="padding: 6px 10px; color: var(--ol-ink-2);" class="ol-kr">§ 4. 출가</div>
-              <div style="padding: 6px 10px; color: var(--ol-ink-2);" class="ol-kr">§ 5. 보드가야</div>
-              <div style="padding: 6px 10px; color: var(--ol-muted);">+ 절 추가</div>
-            </aside>
-            <!-- Editor -->
-            <section style="padding: 32px 40px; background: var(--ol-bg); overflow: hidden;">
-              <div style="font-family: var(--ol-font-mono); font-size: 10.5px; color: var(--ol-muted); letter-spacing: 0.08em;">§ 1 / 도솔천에서</div>
-              <h2 style="font-size: 28px; margin-top: 14px; line-height: 1.3; letter-spacing: -0.02em; font-family: var(--ol-font-sans);" class="ol-kr">한 보살의 마지막 생.</h2>
-              <p style="margin-top: 18px; font-size: 15px; line-height: 1.75; color: var(--ol-ink-2); max-width: 48ch; font-family: var(--ol-font-sans);" class="ol-kr">
-                도솔천 내원궁의 보살은 다섯 가지를 살펴 인간 세상에 내려갈 때를 정한다.
-                시절·대륙·나라·종족·어머니 — 그렇게 정해진 한 생이 시작되려 하고 있었다.
-              </p>
-            </section>
-            <!-- Inspector -->
-            <aside style="border-left: 1px solid var(--ol-border); padding: 16px; background: var(--ol-surface-3);">
-              <div style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ol-muted); margin-bottom: 12px;">BLOCK INSPECTOR</div>
-              <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div><div style="font-size: 10px; color: var(--ol-muted); letter-spacing: 0.06em; text-transform: uppercase;">TYPE</div><div style="margin-top: 3px;">scripture-note</div></div>
-                <div><div style="font-size: 10px; color: var(--ol-muted); letter-spacing: 0.06em; text-transform: uppercase;">SOURCE</div><div style="margin-top: 3px; color: var(--ol-ink);" class="ol-kr">방광대장엄경 §3</div></div>
-                <div><div style="font-size: 10px; color: var(--ol-muted); letter-spacing: 0.06em; text-transform: uppercase;">REFS</div><div style="margin-top: 3px;">3 connected</div></div>
-                <div><div style="font-size: 10px; color: var(--ol-muted); letter-spacing: 0.06em; text-transform: uppercase;">SIZE</div><div style="margin-top: 3px;">4.2 KB</div></div>
-              </div>
-              <div style="border-top: 1px solid var(--ol-border); margin-top: 16px; padding-top: 14px;">
-                <div style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ol-muted); margin-bottom: 8px;">EXPORT</div>
-                <div style="background: var(--ol-ink); color: var(--ol-bg); padding: 8px 10px; border-radius: 6px; text-align: center; font-size: 11.5px;">⤓ 단일 HTML</div>
-              </div>
-            </aside>
+
+          <!-- iframe 컨테이너 (data-active로 활성 뷰 제어) -->
+          <div class="atlas-preview-wrap" data-active="home">
+            <iframe
+              src={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html')}
+              class="atlas-preview-iframe"
+              data-view="home"
+              tabindex="-1"
+              title="OL ATLAS 홈 미리보기"
+            ></iframe>
+            <iframe
+              src={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html#kanban')}
+              class="atlas-preview-iframe"
+              data-view="kanban"
+              tabindex="-1"
+              title="OL ATLAS 칸반 미리보기"
+            ></iframe>
           </div>
-          <!-- Footer bar -->
-          <div style="display: flex; align-items: center; padding: 8px 14px; border-top: 1px solid var(--ol-border); background: var(--ol-surface-2); font-family: var(--ol-font-mono); font-size: 11px; color: var(--ol-muted);">
-            <span>3,422 자 · 5 절 · 2.1 MB</span>
-            <div class="ol-spacer"></div>
-            <span>● 자동저장 · 로컬</span>
-          </div>
+
         </div>
       </div>
     </section>
+
+    <script>
+      const tabs = document.querySelectorAll<HTMLButtonElement>('.atlas-tab');
+      const wrap = document.querySelector('.atlas-preview-wrap');
+      const openLink = document.getElementById('atlas-open-link') as HTMLAnchorElement | null;
+      const baseHome   = openLink?.href ?? '';
+      const baseKanban = baseHome.replace(/#.*$/, '') + '#kanban';
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const target = tab.dataset.tab ?? 'home';
+
+          tabs.forEach(t => {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+
+          if (wrap) wrap.setAttribute('data-active', target);
+          if (openLink) openLink.href = target === 'kanban' ? baseKanban : baseHome;
+        });
+      });
+    </script>
 
     <!-- Features + Download -->
     <section class="ol-section">
