@@ -118,14 +118,16 @@ const blogCollection = defineCollection({
   }),
 });
 
-const bookCollection = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/book' }),
+// works — 제작 중인 원고 (챕터별 단편 문서)
+const worksCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/works' }),
   schema: z.object({
     title: z.string(),
     series: z.string().optional(),
     chapter: z.number().optional(),
     order: z.number().default(0),
     date: z.coerce.date().optional(),
+    status: z.enum(['draft', 'revising', 'ready', 'published']).default('draft'),
     entities: z.array(z.string()).default([]),
     relations: z.array(RelationSchema).default([]),
     primary_entity: z.string().optional(),
@@ -136,6 +138,25 @@ const bookCollection = defineCollection({
     })).default([]),
     tags: z.array(z.string()).default([]),
     published: z.boolean().default(false),
+    excerpt: z.string().optional(),
+  }),
+});
+
+// book — 완결된 출판물 메타데이터 (서지 정보)
+const bookCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/book' }),
+  schema: z.object({
+    title: z.string(),
+    subtitle: z.string().optional(),
+    version: z.string().default('v1.0'),
+    publishedAt: z.coerce.date(),
+    htmlPath: z.string(),
+    primaryEntities: z.array(z.string()).default([]),
+    description: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    lang: z.string().default('ko'),
+    level: z.number().min(1).max(5).optional(),
+    published: z.boolean().default(true),
   }),
 });
 
@@ -195,8 +216,9 @@ const ontologyCollection = defineCollection({
 });
 
 export const collections = {
-  blog: blogCollection,
+  works: worksCollection,
   book: bookCollection,
+  blog: blogCollection,
   design: designCollection,
   ai: aiCollection,
   entities: entitiesCollection,

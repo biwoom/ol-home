@@ -1,26 +1,22 @@
 import { getCollection } from 'astro:content';
 
-/**
- * 전체 검색 인덱스 생성
- * pagefind 또는 fuse.js와 연동 가능 (Phase 4)
- */
 export async function buildSearchIndex() {
-  const [books, entities, designs, blogs] = await Promise.all([
-    getCollection('book', e => e.data.published),
+  const [works, entities, designs, blogs] = await Promise.all([
+    getCollection('works', e => e.data.published),
     getCollection('entities', e => e.data.published),
     getCollection('design', e => e.data.published),
     getCollection('blog', e => e.data.published),
   ]);
 
   return [
-    ...books.map(doc => ({
-      type: 'book' as const,
-      id: doc.slug,
+    ...works.map(doc => ({
+      type: 'works' as const,
+      id: doc.id,
       title: doc.data.title,
       excerpt: doc.data.excerpt ?? '',
       entities: doc.data.entities ?? [],
       tags: doc.data.tags ?? [],
-      url: `/book/${doc.slug}`,
+      url: `/works/${doc.id}`,
     })),
     ...entities.map(doc => ({
       type: 'entity' as const,
@@ -33,21 +29,21 @@ export async function buildSearchIndex() {
     })),
     ...designs.map(doc => ({
       type: 'design' as const,
-      id: doc.slug,
+      id: doc.id,
       title: doc.data.title,
       excerpt: '',
       entities: doc.data.entities ?? [],
       tags: doc.data.tags ?? [],
-      url: `/design/${doc.slug}`,
+      url: `/design/${doc.id}`,
     })),
     ...blogs.map(doc => ({
       type: 'blog' as const,
-      id: doc.slug,
+      id: doc.id,
       title: doc.data.title,
-      excerpt: doc.data.excerpt ?? '',
+      excerpt: doc.data.description ?? '',
       entities: doc.data.entities ?? [],
       tags: doc.data.tags ?? [],
-      url: `/blog/${doc.slug}`,
+      url: `/blog/${doc.id}`,
     })),
   ];
 }

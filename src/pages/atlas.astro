@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../lib/url';
 ---
 
 <BaseLayout
@@ -12,21 +13,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <div class="ol-container">
         <span class="ol-kicker">TOOL · 단일 HTML 제작 도구</span>
         <h1 class="ol-kr">
-          한 파일에 담는<br>
-          <em>불교 콘텐츠</em> 제작 도구.
+          <em>한 파일에 담는</em><br>
+          불교 콘텐츠 제작 도구.
         </h1>
         <p class="ol-lead ol-kr">
           ATLAS는 단일 HTML 파일로 동작하는 불교 콘텐츠 에디터이자 뷰어입니다.
           설치도, 서버도 필요하지 않습니다. 만들고, 저장하고, 그대로 누군가에게 보냅니다 — 한 파일 그대로.
         </p>
         <div class="ol-hero-actions">
-          <a class="ol-btn ol-btn-accent">
+          <a class="ol-btn ol-btn-accent" href={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html')} download="ol-atlas_v0.0.6.html">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 3v13m0 0 4-4m-4 4-4-4M4 21h16"/>
             </svg>
-            v0.0.4 내려받기
+            v0.0.6 내려받기
           </a>
-          <a class="ol-btn ol-btn-outline">브라우저에서 바로 열기</a>
+          <a class="ol-btn ol-btn-outline" href={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html')} target="_blank" rel="noopener noreferrer">
+            브라우저에서 바로 열기
+          </a>
           <a class="ol-btn ol-btn-ghost" href="https://github.com/biwoom/ol-atlas" target="_blank" rel="noopener">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.21c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.47.11-3.06 0 0 .97-.31 3.18 1.18.92-.26 1.91-.39 2.9-.39.99 0 1.98.13 2.9.39 2.21-1.5 3.18-1.18 3.18-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.4-5.26 5.68.41.36.78 1.06.78 2.13v3.16c0 .31.21.67.79.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/>
@@ -104,7 +107,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <!-- Features + Download -->
     <section class="ol-section">
       <div class="ol-container">
-        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px;">
+        <div class="ol-section-grid-2">
           <div>
             <span class="ol-kicker">FEATURES · 설계 원칙</span>
             <h2 style="font-size: 32px; margin-top: 12px; letter-spacing: -0.025em;" class="ol-kr">설치 없음, 서버 없음, 잠금 없음.</h2>

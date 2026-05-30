@@ -1,10 +1,16 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { url } from '../../lib/url';
+
+const books = (
+  await getCollection('book', e => e.data.published === true)
+).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
 ---
 
 <BaseLayout
   title="OL BOOK — 불교 콘텐츠 라이브러리"
-  description="OL이 제작한 불교 콘텐츠 모음. ATLAS 위에서 동작하는 단일 HTML 책들."
+  description="완결된 OL 불교 콘텐츠를 브라우저에서 읽거나 내려받을 수 있습니다."
 >
   <main>
     <!-- Hero -->
@@ -12,8 +18,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <div class="ol-container">
         <span class="ol-kicker">LIBRARY · 콘텐츠 in ATLAS</span>
         <h1 class="ol-kr">
-          <em>읽고, 고치고,</em><br>
-          다시 나눠 갖는<br>
+          <em>읽고, 고치고, 나누는</em><br>
           불교 콘텐츠 책장.
         </h1>
         <p class="ol-lead ol-kr">
@@ -21,11 +26,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </p>
       </div>
     </section>
+    
+    <hr style="margin:80px 0 40px; width: 80%; margin:0 auto;" /> 
 
-    <!-- Filter row -->
-    <section class="ol-section-tight">
+    <section class="ol-section">
       <div class="ol-container">
-        <div class="ol-row" style="flex-wrap: wrap; gap: 16px;">
+        <div style="margin-bottom: 48px;">
+          <span class="ol-kicker">BOOK · 출판된 지혜</span>
+          <h1 style="font-size: 32px; margin-top: 10px; margin-bottom: 20px;" class="ol-kr">
+            OL BOOK 라이브러리
+          </h1>
+           <!-- Filter row -->
+          <div class="ol-row" style="flex-wrap: wrap; gap: 16px;">
           <div class="ol-chips">
             <button class="ol-chip active">전체 <span class="count">12</span></button>
             <button class="ol-chip">경전 <span class="count">4</span></button>
@@ -39,173 +51,100 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             <button>목록</button>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- Featured book -->
-    <section class="ol-section-tight">
-      <div class="ol-container">
-        <div class="ol-card ol-card-flush" style="display: grid; grid-template-columns: 300px 1fr; overflow: hidden; border-color: var(--ol-border-strong);">
-          <div class="ol-book-cover" style="aspect-ratio: auto;">
-            <div>
-              <div class="sub">OL · BOOK 01</div>
-              <div class="title ol-kr" style="margin-top: 18px; font-size: 36px;">붓다 스토리</div>
-              <div class="sub" style="margin-top: 14px;">A LIFE IN 12 CHAPTERS</div>
-            </div>
+          <!-- <p style="color:var(--ol-muted);margin-top:12px;max-width:52ch;line-height:1.7;" class="ol-kr">
+            완결된 불교 콘텐츠를 브라우저에서 읽거나 단일 HTML 파일로 내려받을 수 있습니다.
+            모든 파일은 설치 없이 브라우저 하나로 열립니다.
+          </p> -->
+          <!-- <div style="margin-top:16px;">
+            <a href={url('/works')} class="ol-btn ol-btn-outline ol-btn-sm">
+              제작 중인 원고 보기 (WORKS) →
+            </a>
+          </div> -->
+        </div>
+
+        {books.length > 0 ? (
+          <div class="ol-grid-2">
+            {books.map(book => (
+              <div class="ol-card" style="display:flex;flex-direction:column;gap:20px;">
+                <div>
+                  <span class="ol-mono-label" style="margin-bottom:8px;display:block;">
+                    {new Date(book.data.publishedAt).getFullYear()} · {book.data.version}
+                    {book.data.level && ` · 난이도 ${book.data.level}/5`}
+                  </span>
+                  <h2 style="font-size:22px;margin:0 0 8px;" class="ol-kr">
+                    {book.data.title}
+                  </h2>
+                  {book.data.subtitle && (
+                    <p style="font-size:14px;color:var(--ol-muted);margin:0 0 8px;" class="ol-kr">
+                      {book.data.subtitle}
+                    </p>
+                  )}
+                  {book.data.description && (
+                    <p style="font-size:14px;color:var(--ol-muted);line-height:1.6;" class="ol-kr">
+                      {book.data.description}
+                    </p>
+                  )}
+                </div>
+
+                {book.data.tags.length > 0 && (
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    {book.data.tags.map(tag => (
+                      <span class="ol-badge">{tag}</span>
+                    ))}
+                  </div>
+                )}
+
+                <div style="display:flex;gap:10px;margin-top:auto;">
+                  <a
+                    href={url(`/books/${book.data.htmlPath}/`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="ol-btn ol-btn-primary ol-btn-sm"
+                    style="flex:1;justify-content:center;"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="2" y1="12" x2="22" y2="12"/>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    웹에서 읽기
+                  </a>
+
+                  <a
+                    href={url(`/books/${book.data.htmlPath}/index.html`)}
+                    download={`${book.data.title}-${book.data.version}.html`}
+                    class="ol-btn ol-btn-outline ol-btn-sm"
+                    style="flex:1;justify-content:center;"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 3v13m0 0 4-4m-4 4-4-4M4 21h16"/>
+                    </svg>
+                    HTML 내려받기
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
-          <div style="padding: 36px;">
-            <span class="ol-badge ol-badge-accent ol-badge-dot">진행 중 · 7 / 12 장</span>
-            <h2 style="font-size: 30px; margin-top: 14px; letter-spacing: -0.025em;" class="ol-kr">OL 붓다 스토리</h2>
-            <p style="color: var(--ol-ink-2); margin-top: 14px; line-height: 1.7; max-width: 60ch;" class="ol-kr">
-              도솔천에서 쿠시나가라까지, 한 사람의 생을 열두 장으로 옮겨 적었습니다. 빨리어 경전과 한역 주석을 함께 싣고, 인용된 모든 출처는 클릭으로 따라갈 수 있습니다.
+        ) : (
+          <div style="text-align:center;padding:80px 0;color:var(--ol-muted);">
+            <p class="ol-kr" style="font-size:15px;">준비 중입니다.</p>
+            <p class="ol-kr" style="font-size:13px;margin-top:8px;">
+              <a href={url('/works')} style="color:inherit;">WORKS</a>에서 제작 중인 원고를 먼저 만나보세요.
             </p>
-            <div style="display: flex; gap: 24px; margin-top: 24px; font-family: var(--ol-font-mono); font-size: 11.5px; color: var(--ol-muted); letter-spacing: 0.06em;">
-              <div><div style="color: var(--ol-ink); font-size: 22px; letter-spacing: -0.02em;">42</div>최신 갱신 · 5/21</div>
-              <div><div style="color: var(--ol-ink); font-size: 22px; letter-spacing: -0.02em;">3.4MB</div>단일 HTML</div>
-              <div><div style="color: var(--ol-ink); font-size: 22px; letter-spacing: -0.02em;">CC0</div>저작권 개방</div>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 28px;">
-              <a class="ol-btn ol-btn-accent">ATLAS에서 열기</a>
-              <a class="ol-btn ol-btn-outline">HTML 내려받기 (3.4 MB)</a>
-              <a class="ol-btn ol-btn-ghost">원본 소스 →</a>
-            </div>
           </div>
-        </div>
+        )}
+
       </div>
     </section>
 
-    <!-- Book grid -->
-    <section class="ol-section-tight">
-      <div class="ol-container">
-        <div class="ol-grid-4">
-          <a class="ol-book-card">
-            <div class="ol-book-cover">
-              <div>
-                <div class="sub">DHAMMAPADA</div>
-                <div class="title ol-kr" style="margin-top: 10px;">담마빠다</div>
-                <div class="sub" style="margin-top: 8px;">26章 · 423偈</div>
-              </div>
-            </div>
-            <div class="ol-book-meta">
-              <div class="title-row"><h4 class="ol-kr">OL 담마빠다</h4><span class="ol-badge">v1.2</span></div>
-              <div class="sub ol-kr">빨리어 · 한역 · 한글</div>
-              <div class="meta-row"><span>4.1 MB</span><span>·</span><span>2026.05</span></div>
-            </div>
-          </a>
-
-          <a class="ol-book-card">
-            <div class="ol-book-cover alt">
-              <div>
-                <div class="sub">MADHYAMAKA</div>
-                <div class="title ol-kr" style="margin-top: 10px;">중관학 강의</div>
-                <div class="sub" style="margin-top: 8px;">15강 · 나가르주나</div>
-              </div>
-            </div>
-            <div class="ol-book-meta">
-              <div class="title-row"><h4 class="ol-kr">OL 중관학 강의</h4><span class="ol-badge ol-badge-accent ol-badge-dot">NEW</span></div>
-              <div class="sub ol-kr">근본중송과 주석</div>
-              <div class="meta-row"><span>2.8 MB</span><span>·</span><span>2026.04</span></div>
-            </div>
-          </a>
-
-          <a class="ol-book-card">
-            <div class="ol-book-cover">
-              <div>
-                <div class="sub">SEONRIM</div>
-                <div class="title ol-kr" style="margin-top: 10px;">선림</div>
-                <div class="sub" style="margin-top: 8px;">禪師들의 삶과 노래</div>
-              </div>
-            </div>
-            <div class="ol-book-meta">
-              <div class="title-row"><h4 class="ol-kr">OL 선림</h4><span class="ol-badge">v0.6</span></div>
-              <div class="sub ol-kr">18명의 선사 · 어록 · 게송</div>
-              <div class="meta-row"><span>5.2 MB</span><span>·</span><span>2026.03</span></div>
-            </div>
-          </a>
-
-          <a class="ol-book-card">
-            <div class="ol-book-cover alt">
-              <div>
-                <div class="sub">HEART SUTRA</div>
-                <div class="title ol-kr" style="margin-top: 10px;">반야심경</div>
-                <div class="sub" style="margin-top: 8px;">逐字 풀이</div>
-              </div>
-            </div>
-            <div class="ol-book-meta">
-              <div class="title-row"><h4 class="ol-kr">OL 반야심경 축자해</h4><span class="ol-badge">v2.0</span></div>
-              <div class="sub ol-kr">260자 · 한자 한자 풀이</div>
-              <div class="meta-row"><span>1.6 MB</span><span>·</span><span>2026.02</span></div>
-            </div>
-          </a>
-
-          <a class="ol-book-card">
-            <div class="ol-book-cover">
-              <div>
-                <div class="sub">NAGARJUNA</div>
-                <div class="title ol-kr" style="margin-top: 10px;">나가르주나</div>
-                <div class="sub" style="margin-top: 8px;">생애와 사상</div>
-              </div>
-            </div>
-            <div class="ol-book-meta">
-              <div class="title-row"><h4 class="ol-kr">OL 나가르주나 평전</h4><span class="ol-badge">v0.4</span></div>
-              <div class="sub ol-kr">2 ~ 3 세기 인도불교</div>
-              <div class="meta-row"><span>2.1 MB</span><span>·</span><span>2026.01</span></div>
-            </div>
-          </a>
-
-          <a class="ol-book-card">
-            <div class="ol-book-cover alt">
-              <div>
-                <div class="sub">SUTTA NIPATA</div>
-                <div class="title ol-kr" style="margin-top: 10px;">숫타니파타</div>
-                <div class="sub" style="margin-top: 8px;">선집</div>
-              </div>
-            </div>
-            <div class="ol-book-meta">
-              <div class="title-row"><h4 class="ol-kr">OL 숫타니파타 선집</h4><span class="ol-badge">v0.9</span></div>
-              <div class="sub ol-kr">고층 경전 · 5품 선역</div>
-              <div class="meta-row"><span>3.0 MB</span><span>·</span><span>2025.12</span></div>
-            </div>
-          </a>
-
-          <a class="ol-book-card">
-            <div class="ol-book-cover">
-              <div>
-                <div class="sub">XUANZANG</div>
-                <div class="title ol-kr" style="margin-top: 10px;">현장의 길</div>
-                <div class="sub" style="margin-top: 8px;">서역기 · 17년</div>
-              </div>
-            </div>
-            <div class="ol-book-meta">
-              <div class="title-row"><h4 class="ol-kr">OL 현장의 길</h4><span class="ol-badge">v0.3</span></div>
-              <div class="sub ol-kr">대당서역기 발췌·지도</div>
-              <div class="meta-row"><span>4.8 MB</span><span>·</span><span>2025.11</span></div>
-            </div>
-          </a>
-
-          <a class="ol-book-card" style="border-style: dashed; background: transparent;">
-            <div class="ol-book-cover muted" style="border-bottom-style: dashed;">
-              <div>
-                <div class="sub">PLANNED</div>
-                <div class="title ol-kr" style="margin-top: 10px; font-style: italic;">예정된 책</div>
-                <div class="sub" style="margin-top: 8px;">+ 5 권</div>
-              </div>
-            </div>
-            <div class="ol-book-meta">
-              <div class="title-row"><h4 class="ol-kr" style="color: var(--ol-muted);">대장경 입문 · 인도불교사 외</h4></div>
-              <div class="sub ol-kr">2026년 하반기 시작</div>
-              <div class="meta-row"><span>로드맵 보기 →</span></div>
-            </div>
-          </a>
-        </div>
-      </div>
-    </section>
 
     <!-- WHY callout -->
+    <hr style="margin:80px 0 40px; width: 80%; margin:0 auto;" /> 
     <section class="ol-section">
       <div class="ol-container">
         <div class="ol-card" style="background: var(--ol-surface-2); border-color: var(--ol-border); padding: 36px;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center;">
+          <div class="ol-section-grid-2">
             <div>
               <span class="ol-kicker">WHY · ATLAS + BOOK</span>
               <h3 style="font-size: 26px; margin-top: 12px; letter-spacing: -0.02em; line-height: 1.3;" class="ol-kr">"콘텐츠를 도구와 함께 배포한다는 것"</h3>

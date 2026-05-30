@@ -40,7 +40,7 @@ posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 280px; gap: 48px; align-items: start;">
+        <div class="ol-section-grid-sidebar">
           <div>
             {posts.length === 0 ? (
               <div style="padding: 48px 0; color: var(--ol-muted); font-family: var(--ol-font-mono); font-size: 13px;">

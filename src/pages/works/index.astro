@@ -1,0 +1,97 @@
+---
+import { getCollection } from 'astro:content';
+import WorksLayout from '../../layouts/WorksLayout.astro';
+import { url } from '../../lib/url';
+
+const allWorks = await getCollection('works', e => e.data.published !== false);
+
+const groups = allWorks.reduce((acc, entry) => {
+  const series = entry.data.series ?? '_standalone';
+  if (!acc[series]) acc[series] = [];
+  acc[series].push(entry);
+  return acc;
+}, {} as Record<string, typeof allWorks>);
+
+for (const key of Object.keys(groups)) {
+  groups[key].sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+}
+
+function formatSeries(key: string): string {
+  if (key === '_standalone') return '독립 문서';
+  return key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+const statusLabel: Record<string, string> = {
+  draft:     '초고',
+  revising:  '수정중',
+  ready:     '완료',
+  published: '출판됨',
+};
+---
+
+<WorksLayout title="OL WORKS — 제작 중인 원고들">
+  <div>
+    <div class="ol-works-index-header">
+      <span class="ol-kicker">WORKS · 생성 중인 지혜</span>
+      <h1 style="font-size: 32px; margin-top: 10px;" class="ol-kr">
+        작업 중인 원고들
+      </h1>
+      <p style="color: var(--ol-muted); margin-top: 12px; max-width: 52ch; line-height: 1.7;" class="ol-kr">
+        완결 이전의 초고, 번역 초안, 주석 연구를 공개합니다.
+        완결된 원고는 OL BOOK으로 출판됩니다.
+      </p>
+    </div>
+
+    {Object.entries(groups).map(([series, entries]) => (
+      <section style="margin-bottom: 48px;">
+        <h2 class="ol-kicker" style="margin-bottom: 14px;">
+          {formatSeries(series)} · {entries.length}편
+        </h2>
+
+        <div style="display: flex; flex-direction: column; border: 1px solid var(--ol-border); border-radius: var(--ol-r-lg); overflow: hidden;">
+          {entries.map((entry, i) => (
+            <a
+              href={url(`/works/${entry.id}`)}
+              style={[
+                'display:flex;align-items:center;justify-content:space-between;',
+                'padding:16px 20px;background:var(--ol-surface);text-decoration:none;',
+                'color:inherit;transition:background 100ms ease;',
+                i > 0 ? 'border-top:1px solid var(--ol-border);' : '',
+              ].join('')}
+              onmouseover="this.style.background='var(--ol-surface-2)'"
+              onmouseout="this.style.background='var(--ol-surface)'"
+            >
+              <div style="display:flex;align-items:center;gap:14px;">
+                <span class="ol-mono-label" style="min-width:24px;text-align:right;">
+                  {String(entry.data.chapter ?? (i + 1)).padStart(2, '0')}
+                </span>
+                <div>
+                  <div style="font-size:15px;font-weight:600;color:var(--ol-ink);" class="ol-kr">
+                    {entry.data.title}
+                  </div>
+                  {entry.data.excerpt && (
+                    <div style="font-size:13px;color:var(--ol-muted);margin-top:3px;line-height:1.5;" class="ol-kr">
+                      {entry.data.excerpt}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                <span class={`ol-works-status ol-works-status--${entry.data.status ?? 'draft'}`}>
+                  {statusLabel[entry.data.status ?? 'draft']}
+                </span>
+                <span style="color:var(--ol-subtle, #a3a3a3);">→</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {allWorks.length === 0 && (
+      <div style="text-align:center;padding:80px 0;color:var(--ol-muted);">
+        <p class="ol-kr">아직 공개된 원고가 없습니다.</p>
+      </div>
+    )}
+  </div>
+</WorksLayout>

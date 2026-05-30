@@ -27,4 +27,4 @@ pnpm-debug.log*
 .claude/
 
 ol-home.code-workspace
-ol-ref/
+.ol-ref/

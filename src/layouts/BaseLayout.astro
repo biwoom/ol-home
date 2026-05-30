@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import OLHeader from '../components/layout/OLHeader.astro';
 import OLFooter from '../components/layout/OLFooter.astro';
+import OLSearchModal from '../components/layout/OLSearchModal.astro';
 
 interface Props {
   title?: string;
@@ -41,11 +42,18 @@ const {
       document.documentElement.classList.toggle('dark', theme === 'dark');
     })();
   </script>
+  <!-- Works sidebar: 기본 닫힌 상태 -->
+  <script is:inline>
+    document.documentElement.setAttribute('data-works-sidebar', 'closed');
+  </script>
 </head>
 <body class="ol-kr">
   <div class="ol-app">
     <OLHeader />
-    <slot />
+    <OLSearchModal />
+    <div data-pagefind-body>
+      <slot />
+    </div>
     <OLFooter />
   </div>
 </body>

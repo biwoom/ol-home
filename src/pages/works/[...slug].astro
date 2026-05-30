@@ -1,0 +1,132 @@
+---
+import { getCollection, render } from 'astro:content';
+import WorksLayout from '../../layouts/WorksLayout.astro';
+
+export async function getStaticPaths() {
+  const works = await getCollection('works', e => e.data.published !== false);
+  return works.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+const statusLabel: Record<string, string> = {
+  draft: '초고', revising: '수정중', ready: '완료', published: '출판됨',
+};
+const statusKey = entry.data.status ?? 'draft';
+---
+
+<WorksLayout
+  title={`${entry.data.title} — OL WORKS`}
+  currentId={entry.id}
+>
+  <article class="ol-works-article">
+
+    <header class="ol-works-article-header">
+      {entry.data.series && (
+        <span class="ol-kicker">
+          {entry.data.series.replace(/-/g, ' ').toUpperCase()}
+        </span>
+      )}
+      <h1 style="font-size: 30px; margin-top: 10px; line-height: 1.3;" class="ol-kr">
+        {entry.data.title}
+      </h1>
+
+      <div class="ol-works-article-meta">
+        <span class={`ol-works-status ol-works-status--${statusKey}`}>
+          {statusLabel[statusKey]}
+        </span>
+        {entry.data.date && (
+          <span class="ol-mono-label">
+            {new Date(entry.data.date).toLocaleDateString('ko-KR', {
+              year: 'numeric', month: 'long', day: 'numeric',
+            })}
+          </span>
+        )}
+        {entry.data.tags.map(tag => (
+          <span class="ol-badge">{tag}</span>
+        ))}
+      </div>
+
+      {entry.data.excerpt && (
+        <p style="color:var(--ol-muted);margin-top:16px;line-height:1.7;" class="ol-kr">
+          {entry.data.excerpt}
+        </p>
+      )}
+    </header>
+
+    <div class="ol-prose ol-kr">
+      <Content />
+    </div>
+
+    {entry.data.sources.length > 0 && (
+      <footer style="margin-top:48px;padding-top:24px;border-top:1px solid var(--ol-border);">
+        <h3 class="ol-kicker" style="margin-bottom:12px;">참고 문헌</h3>
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">
+          {entry.data.sources.map(src => (
+            <li style="font-size:13.5px;color:var(--ol-muted);">
+              <span class="ol-kr">{src.text}</span>
+              {src.passage && (
+                <span style="margin-left:8px;font-family:var(--ol-font-mono);font-size:11px;">
+                  {src.passage}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </footer>
+    )}
+
+  </article>
+
+  <!-- 오른쪽 목차 (JS로 채워짐) -->
+  <nav slot="toc" class="ol-works-toc" id="ol-toc" aria-label="목차">
+    <p class="ol-works-toc-title">목차</p>
+    <ul class="ol-works-toc-list" id="ol-toc-list"></ul>
+  </nav>
+</WorksLayout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const article = document.querySelector('.ol-prose');
+    const tocList = document.getElementById('ol-toc-list');
+    const tocNav  = document.getElementById('ol-toc');
+    if (!article || !tocList || !tocNav) return;
+
+    const headings = article.querySelectorAll('h2, h3');
+    if (headings.length < 2) {
+      tocNav.style.display = 'none';
+      return;
+    }
+
+    headings.forEach((h, i) => {
+      if (!h.id) h.id = `heading-${i}`;
+      const li = document.createElement('li');
+      const a  = document.createElement('a');
+      a.href = `#${h.id}`;
+      a.className = 'ol-works-toc-link';
+      a.dataset.level = h.tagName === 'H3' ? '3' : '2';
+      a.textContent = h.textContent ?? '';
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+
+    const links = tocList.querySelectorAll('.ol-works-toc-link');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            links.forEach(l => l.classList.remove('active'));
+            tocList.querySelector(`a[href="#${entry.target.id}"]`)?.classList.add('active');
+          }
+        });
+      },
+      { rootMargin: '-20% 0px -70% 0px' }
+    );
+
+    headings.forEach(h => observer.observe(h));
+  });
+</script>

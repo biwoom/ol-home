@@ -1,0 +1,191 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { url } from '../lib/url';
+import { getCollection } from 'astro:content';
+
+interface Props {
+  title?: string;
+  description?: string;
+  currentId?: string;
+}
+
+const {
+  title = 'OL WORKS',
+  description = '진행 중인 불교 콘텐츠 원고',
+  currentId,
+} = Astro.props;
+
+const hasToc = Astro.slots.has('toc');
+
+const allWorks = await getCollection('works', e => e.data.published !== false);
+
+const groups = allWorks.reduce((acc, entry) => {
+  const series = entry.data.series ?? '_standalone';
+  if (!acc[series]) acc[series] = [];
+  acc[series].push(entry);
+  return acc;
+}, {} as Record<string, typeof allWorks>);
+
+for (const key of Object.keys(groups)) {
+  groups[key].sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+}
+
+function formatSeries(key: string): string {
+  if (key === '_standalone') return '독립 문서';
+  return key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+const statusLabel: Record<string, string> = {
+  draft:     '초고',
+  revising:  '수정중',
+  ready:     '완료',
+  published: '출판됨',
+};
+---
+
+<BaseLayout title={title} description={description}>
+
+  <!-- 모바일 사이드바 토글 (헤더 아래 고정 바) -->
+  <button
+    class="ol-sidebar-toggle"
+    aria-label="목차 열기/닫기"
+    onclick="const isClosed = document.documentElement.getAttribute('data-works-sidebar') === 'closed'; if (isClosed) { document.documentElement.removeAttribute('data-works-sidebar'); } else { document.documentElement.setAttribute('data-works-sidebar', 'closed'); }"
+  >
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+    <span>원고 목록</span>
+  </button>
+
+  <!-- 1200px 중앙정렬 외부 래퍼 — 헤더와 너비 일치 -->
+  <div class="ol-works-outer">
+
+    <!-- 사이드바: sticky, flex child -->
+    <aside
+      class="ol-works-sidebar"
+      id="works-sidebar"
+      data-pagefind-ignore
+    >
+      <!-- 사이드바 토글 (우측 상단 고정 — 데스크탑: 접기/펼치기, 모바일 드로어: 닫기) -->
+      <button
+        class="ol-works-sidebar-toggle"
+        id="ol-works-sidebar-toggle"
+        aria-label="사이드바 열기/닫기"
+      >
+        <!-- 열림 → 사이드패널 접기 아이콘 -->
+        <svg class="icon-close" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+          <polyline points="15 9 12 12 15 15"/>
+        </svg>
+        <!-- 닫힘 → 사이드패널 펼치기 아이콘 -->
+        <svg class="icon-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+          <polyline points="13 9 16 12 13 15"/>
+        </svg>
+      </button>
+
+      <nav aria-label="WORKS 문서 목차">
+
+        <div class="">
+          <a href={url('/works')} class="ol-works-sidebar-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            WORKS
+          </a>
+          <div style="display:flex;align-items:center;gap:6px; margin-top:10px;">
+            <span class="ol-works-sidebar-count">{allWorks.length}</span>
+            <!-- 모바일 드로어 닫기 버튼 -->
+            <button
+              class="ol-works-drawer-close"
+              aria-label="목차 닫기"
+              onclick="document.documentElement.setAttribute('data-works-sidebar', 'closed');"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <section class="ol-works-sidebar-scroll">
+          {Object.entries(groups).map(([series, entries]) => (
+            <div role="group" aria-labelledby={`wg-${series}`}>
+
+              <h3 id={`wg-${series}`} class="ol-works-group-label">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                {formatSeries(series)}
+              </h3>
+
+              <ul>
+                {entries.map(entry => {
+                  const isActive = currentId === entry.id;
+                  const statusKey = entry.data.status ?? 'draft';
+                  return (
+                    <li>
+                      <a
+                        href={url(`/works/${entry.id}`)}
+                        class:list={['ol-works-nav-link', { active: isActive }]}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <span class="ol-works-nav-title">{entry.data.title}</span>
+                        {statusKey !== 'published' && (
+                          <span class={`ol-works-status ol-works-status--${statusKey}`}>
+                            {statusLabel[statusKey]}
+                          </span>
+                        )}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+
+            </div>
+          ))}
+        </section>
+      </nav>
+    </aside>
+
+    <!-- 본문: flex-grow, 사이드바 옆에서 확장 -->
+    <div class:list={['ol-works-layout', { 'ol-works-layout--toc': hasToc }]}>
+
+      <main class="ol-works-main">
+        <slot />
+      </main>
+
+      <!-- 오른쪽 목차 (TOC) — slug 페이지에서만 사용 -->
+      {hasToc && (
+        <aside data-pagefind-ignore>
+          <slot name="toc" />
+        </aside>
+      )}
+
+    </div>
+
+  </div>
+
+  <script>
+    const btn = document.getElementById('ol-works-sidebar-toggle');
+    btn?.addEventListener('click', () => {
+      const isClosed = document.documentElement.getAttribute('data-works-sidebar') === 'closed';
+      if (isClosed) {
+        document.documentElement.removeAttribute('data-works-sidebar');
+      } else {
+        document.documentElement.setAttribute('data-works-sidebar', 'closed');
+      }
+    });
+  </script>
+
+</BaseLayout>

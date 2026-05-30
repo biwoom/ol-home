@@ -1,6 +1,7 @@
 ---
 title: "1장 — 탄생: 도솔천에서 룸비니까지"
 series: "OL 붓다 스토리"
+status: revising
 order: 1
 published: true
 ---

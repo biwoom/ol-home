@@ -1,0 +1,180 @@
+---
+// OLSearchModal.astro — Pagefind Command Palette
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+const pagefindPath = `${base}pagefind/pagefind.js`;
+---
+
+<!-- 오버레이 -->
+<div
+  class="ol-search-overlay"
+  id="ol-search-overlay"
+  aria-hidden="true"
+  data-pagefind-path={pagefindPath}
+>
+  <div class="ol-search-modal" role="dialog" aria-modal="true" aria-label="검색">
+
+    <!-- 검색 입력 -->
+    <div class="ol-search-input-wrap">
+      <svg class="ol-search-icon" width="16" height="16" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        id="ol-search-input"
+        class="ol-search-input"
+        type="text"
+        placeholder="검색어 입력..."
+        autocomplete="off"
+      />
+      <kbd class="ol-search-kbd">ESC</kbd>
+    </div>
+
+    <!-- 결과 영역 -->
+    <div class="ol-search-results" id="ol-search-results">
+      <div class="ol-search-empty">검색어를 입력하세요</div>
+    </div>
+
+    <!-- 하단 힌트 -->
+    <div class="ol-search-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> 이동</span>
+      <span><kbd>Enter</kbd> 열기</span>
+      <span><kbd>ESC</kbd> 닫기</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let pagefind: any = null;
+  let selectedIndex = -1;
+
+  async function loadPagefind() {
+    if (pagefind) return pagefind;
+    try {
+      const overlay = document.getElementById('ol-search-overlay');
+      const pfPath = overlay?.dataset.pagefindPath || '/pagefind/pagefind.js';
+      pagefind = await import(/* @vite-ignore */ pfPath);
+      await pagefind.init();
+      return pagefind;
+    } catch (e) {
+      console.error('[OL Search] Pagefind 로드 실패:', e);
+      console.error('[OL Search] 시도한 경로:',
+        document.getElementById('ol-search-overlay')?.dataset.pagefindPath
+      );
+      return null;
+    }
+  }
+
+  const overlay = document.getElementById('ol-search-overlay')!;
+  const input = document.getElementById('ol-search-input') as HTMLInputElement;
+  const resultsEl = document.getElementById('ol-search-results')!;
+
+  function openSearch() {
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.removeAttribute('inert');
+    input.value = '';
+    resultsEl.innerHTML = '<div class="ol-search-empty">검색어를 입력하세요</div>';
+    selectedIndex = -1;
+    requestAnimationFrame(() => input.focus());
+    loadPagefind(); // 첫 열기 시 미리 로드
+  }
+
+  function closeSearch() {
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.setAttribute('inert', '');
+    input.blur();
+  }
+
+  // 검색 실행 (디바운스 200ms)
+  let debounceTimer: ReturnType<typeof setTimeout>;
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const query = input.value.trim();
+      if (!query) {
+        resultsEl.innerHTML = '<div class="ol-search-empty">검색어를 입력하세요</div>';
+        selectedIndex = -1;
+        return;
+      }
+
+      const pf = await loadPagefind();
+      if (!pf) {
+        resultsEl.innerHTML = '<div class="ol-search-empty">검색 인덱스를 불러올 수 없습니다</div>';
+        return;
+      }
+
+      const search = await pf.search(query);
+      if (search.results.length === 0) {
+        resultsEl.innerHTML = '<div class="ol-search-empty">검색 결과가 없습니다</div>';
+        selectedIndex = -1;
+        return;
+      }
+
+      // 상위 8개 결과
+      const results = await Promise.all(
+        search.results.slice(0, 8).map((r: any) => r.data())
+      );
+
+      resultsEl.innerHTML = results.map((r: any, i: number) => `
+        <a
+          href="${r.url}"
+          class="ol-search-result${i === 0 ? ' active' : ''}"
+          data-index="${i}"
+        >
+          <span class="ol-search-result-title">${r.meta?.title ?? '제목 없음'}</span>
+          <span class="ol-search-result-excerpt">${r.excerpt ?? ''}</span>
+        </a>
+      `).join('');
+
+      selectedIndex = 0;
+    }, 200);
+  });
+
+  // 키보드 네비게이션
+  input.addEventListener('keydown', (e) => {
+    const items = resultsEl.querySelectorAll<HTMLAnchorElement>('.ol-search-result');
+    if (!items.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+      updateSelection(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = Math.max(selectedIndex - 1, 0);
+      updateSelection(items);
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+      e.preventDefault();
+      items[selectedIndex].click();
+    }
+  });
+
+  function updateSelection(items: NodeListOf<HTMLAnchorElement>) {
+    items.forEach((el, i) => el.classList.toggle('active', i === selectedIndex));
+    items[selectedIndex]?.scrollIntoView({ block: 'nearest' });
+  }
+
+  // 결과 클릭 시 닫기
+  resultsEl.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('.ol-search-result')) closeSearch();
+  });
+
+  // 전역 단축키: Cmd+K / Ctrl+K
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      const isOpen = overlay.getAttribute('aria-hidden') === 'false';
+      isOpen ? closeSearch() : openSearch();
+    }
+    if (e.key === 'Escape') closeSearch();
+  });
+
+  // 오버레이 클릭으로 닫기
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeSearch();
+  });
+
+  // 헤더 검색 버튼 연결
+  document.getElementById('ol-search-trigger')?.addEventListener('click', openSearch);
+</script>

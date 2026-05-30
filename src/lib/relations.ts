@@ -8,13 +8,9 @@ export type Triple = {
   note?: string;
 };
 
-/**
- * 모든 collection에서 triple을 수집하여 지식그래프 데이터 반환
- * build 시에만 실행됨 (Astro SSG)
- */
 export async function buildKnowledgeGraph() {
-  const [books, entities, designs, blogs] = await Promise.all([
-    getCollection('book'),
+  const [works, entities, designs, blogs] = await Promise.all([
+    getCollection('works'),
     getCollection('entities'),
     getCollection('design'),
     getCollection('blog'),
@@ -30,48 +26,25 @@ export async function buildKnowledgeGraph() {
     }
   }
 
-  for (const book of books) {
-    for (const rel of book.data.relations ?? []) {
-      triples.push({ ...rel, source: book.slug });
+  for (const work of works) {
+    for (const rel of work.data.relations ?? []) {
+      triples.push({ ...rel, source: work.id });
     }
   }
 
   return { triples, entityMap };
 }
 
-/**
- * 특정 entity의 모든 관계 반환 (양방향)
- */
-export async function getEntityRelations(entityId: string) {
-  const { triples } = await buildKnowledgeGraph();
-
+export async function getEntityRelations(entityId: string, triples: Triple[]) {
   const outgoing = triples.filter(t => t.subject === entityId);
   const incoming = triples.filter(t => t.object === entityId);
-
   return { outgoing, incoming };
 }
 
-/**
- * 특정 entity를 언급하는 모든 문서 반환 (backlinks)
- */
-export async function getBacklinks(entityId: string) {
-  const [books, designs, blogs] = await Promise.all([
-    getCollection('book'),
-    getCollection('design'),
-    getCollection('blog'),
-  ]);
-
-  const allDocs = [...books, ...designs, ...blogs];
-
-  return allDocs.filter(doc =>
-    (doc.data.entities ?? []).includes(entityId)
-  );
+export function getBacklinks(entityId: string, triples: Triple[]) {
+  return triples.filter(t => t.object === entityId);
 }
 
-/**
- * entity 연결망 순회 (순환 참조 방지)
- * 불교 연기론상 순환은 자연스럽지만, 렌더링 시 무한 루프 방지
- */
 export function traverseRelations(
   entityId: string,
   triples: Triple[],
