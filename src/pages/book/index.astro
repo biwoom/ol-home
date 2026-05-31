@@ -6,6 +6,10 @@ import { url } from '../../lib/url';
 const books = (
   await getCollection('book', e => e.data.published === true)
 ).sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+
+const PAGE_SIZE = 8;
+
+const allTags = [...new Set(books.flatMap(b => b.data.tags))].sort((a, b) => a.localeCompare(b, 'ko'));
 ---
 
 <BaseLayout
@@ -38,18 +42,18 @@ const books = (
           </h1>
            <!-- Filter row -->
           <div class="ol-row" style="flex-wrap: wrap; gap: 16px;">
-          <div class="ol-chips">
-            <button class="ol-chip active">전체 <span class="count">12</span></button>
-            <button class="ol-chip">경전 <span class="count">4</span></button>
-            <button class="ol-chip">강의 <span class="count">3</span></button>
-            <button class="ol-chip">인물 · 행적 <span class="count">3</span></button>
-            <button class="ol-chip">시화 <span class="count">2</span></button>
+          <div class="ol-chips" id="book-chips">
+            <button class="ol-chip active" data-tag="all">전체 <span class="count">{books.length}</span></button>
+            {allTags.map(tag => {
+              const count = books.filter(b => b.data.tags.includes(tag)).length;
+              return (
+                <button class="ol-chip" data-tag={tag}>
+                  {tag} <span class="count">{count}</span>
+                </button>
+              );
+            })}
           </div>
           <div class="ol-spacer"></div>
-          <div class="ol-tabs">
-            <button class="active">표지 그리드</button>
-            <button>목록</button>
-          </div>
         </div>
 
           <!-- <p style="color:var(--ol-muted);margin-top:12px;max-width:52ch;line-height:1.7;" class="ol-kr">
@@ -64,9 +68,14 @@ const books = (
         </div>
 
         {books.length > 0 ? (
-          <div class="ol-grid-2">
-            {books.map(book => (
-              <div class="ol-card" style="display:flex;flex-direction:column;gap:20px;">
+          <div class="ol-grid-2" id="book-grid">
+            {books.map((book, i) => (
+              <div
+                class="ol-card ol-book-card"
+                data-tags={book.data.tags.join(',')}
+                data-index={i}
+                style={`display:flex;flex-direction:column;gap:20px;${i >= PAGE_SIZE ? 'display:none;' : ''}`}
+              >
                 <div>
                   <span class="ol-mono-label" style="margin-bottom:8px;display:block;">
                     {new Date(book.data.publishedAt).getFullYear()} · {book.data.version}
@@ -135,6 +144,19 @@ const books = (
           </div>
         )}
 
+        <div id="book-no-results" style="display:none; text-align:center; padding:48px 0; color:var(--ol-muted); font-family:var(--ol-font-mono); font-size:13px;" class="ol-kr">
+          선택한 태그에 해당하는 BOOK이 없습니다.
+        </div>
+
+        {books.length > PAGE_SIZE && (
+          <div id="book-loadmore-wrap" style="display:flex; justify-content:center; margin-top:32px;">
+            <button id="book-loadmore-btn" class="ol-btn ol-btn-outline">
+              더 보기
+              <span id="book-loadmore-remaining">({books.length - PAGE_SIZE})</span>
+            </button>
+          </div>
+        )}
+
       </div>
     </section>
 
@@ -159,3 +181,66 @@ const books = (
     </section>
   </main>
 </BaseLayout>
+
+<script>
+  const PAGE_SIZE = 8;
+  let activeTag = 'all';
+  let visibleCount = PAGE_SIZE;
+
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.ol-book-card'));
+  const noResults = document.getElementById('book-no-results')!;
+  const loadmoreWrap = document.getElementById('book-loadmore-wrap');
+  const loadmoreBtn = document.getElementById('book-loadmore-btn');
+  const loadmoreRemaining = document.getElementById('book-loadmore-remaining');
+
+  function matchCard(el: HTMLElement): boolean {
+    if (activeTag === 'all') return true;
+    const tags = (el.dataset.tags ?? '').split(',').filter(Boolean);
+    return tags.includes(activeTag);
+  }
+
+  function applyFilters() {
+    visibleCount = PAGE_SIZE;
+    const matched = cards.filter(matchCard);
+    const unmatched = cards.filter(c => !matchCard(c));
+
+    matched.forEach((c, i) => {
+      c.style.display = i < visibleCount ? '' : 'none';
+    });
+    unmatched.forEach(c => { c.style.display = 'none'; });
+
+    noResults.style.display = matched.length === 0 ? '' : 'none';
+
+    if (loadmoreWrap && loadmoreRemaining) {
+      const remaining = matched.length - visibleCount;
+      if (remaining > 0) {
+        loadmoreWrap.style.display = '';
+        loadmoreRemaining.textContent = `(${remaining})`;
+      } else {
+        loadmoreWrap.style.display = 'none';
+      }
+    }
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('#book-chips .ol-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTag = btn.dataset.tag ?? 'all';
+      document.querySelectorAll<HTMLElement>('#book-chips .ol-chip').forEach(b => {
+        b.classList.toggle('active', b === btn);
+      });
+      applyFilters();
+    });
+  });
+
+  loadmoreBtn?.addEventListener('click', () => {
+    const matched = cards.filter(matchCard);
+    visibleCount += PAGE_SIZE;
+    matched.forEach((c, i) => { c.style.display = i < visibleCount ? '' : 'none'; });
+    const remaining = matched.length - visibleCount;
+    if (remaining > 0 && loadmoreRemaining) {
+      loadmoreRemaining.textContent = `(${remaining})`;
+    } else if (loadmoreWrap) {
+      loadmoreWrap.style.display = 'none';
+    }
+  });
+</script>

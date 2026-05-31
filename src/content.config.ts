@@ -124,6 +124,7 @@ const worksCollection = defineCollection({
   schema: z.object({
     title: z.string(),
     series: z.string().optional(),
+    category: z.string().optional(),
     chapter: z.number().optional(),
     order: z.number().default(0),
     date: z.coerce.date().optional(),
@@ -148,6 +149,8 @@ const bookCollection = defineCollection({
   schema: z.object({
     title: z.string(),
     subtitle: z.string().optional(),
+    series: z.string().optional(),
+    category: z.string().optional(),
     version: z.string().default('v1.0'),
     publishedAt: z.coerce.date(),
     htmlPath: z.string(),
@@ -173,8 +176,10 @@ const designCollection = defineCollection({
     region: z.string().optional(),
     tradition: z.string().optional(),
     entities: z.array(z.string()).default([]),
-    image: z.string().optional(),
+    imagePath: z.string().optional(),   // public/design/ 기준 파일명
+    imageAlt: z.string().optional(),
     source: z.string().optional(),
+    sourceUrl: z.string().optional(),
     license: z.string().default('CC0'),
     tags: z.array(z.string()).default([]),
     published: z.boolean().default(false),
@@ -215,6 +220,15 @@ const ontologyCollection = defineCollection({
   }),
 });
 
+const pagesCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    published: z.boolean().default(true),
+  }),
+});
+
 export const collections = {
   works: worksCollection,
   book: bookCollection,
@@ -223,4 +237,5 @@ export const collections = {
   ai: aiCollection,
   entities: entitiesCollection,
   ontology: ontologyCollection,
+  pages: pagesCollection,
 };

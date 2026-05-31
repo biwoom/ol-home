@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../lib/url';
+
+const partners = [
+  {
+    name: '화순 불암사',
+    address: '전라남도 화순군 춘양면 우봉리 산48-1',
+    website: null,
+  },
+  {
+    name: '지리산 실상사',
+    address: '전북특별자치도 남원시 산내면 실상사길 265',
+    website: 'https://silsangsa.or.kr/',
+  },
+  {
+    name: '광주 선덕사',
+    address: '광주 동구 밤실로136번길 8-21',
+    website: 'https://gwseondeoksa.imweb.me/',
+  },
+  {
+    name: '두륜산 대흥사',
+    address: '전남 해남군 삼산면 대흥사길 400',
+    website: 'http://www.daeheungsa.co.kr/home/main.asp',
+  },
+  {
+    name: '월출산 월남사',
+    address: '전라남도 강진군 성전면 월남1길 100',
+    website: null,
+  },
+];
+---
+
+<BaseLayout
+  title="기여 및 협력 — OL"
+  description="OL 프로젝트에 기여하고 협력해주시는 단체들을 소개합니다."
+>
+  <main>
+    <section class="ol-section">
+      <div class="ol-container" style="max-width: 800px;">
+        <header style="margin-bottom: 48px;">
+          <span class="ol-kicker">PARTNERS · 함께하는 곳</span>
+          <h1 style="font-size: 32px; margin-top: 12px; letter-spacing: -0.025em;" class="ol-kr">
+            기여 및 협력
+          </h1>
+          <p style="color: var(--ol-muted); margin-top: 12px; line-height: 1.7; max-width: 52ch;" class="ol-kr">
+            OL 프로젝트에 기여하고 협력해주시는 단체들입니다. 이 분들의 지혜와 공간이 OL의 콘텐츠를 더 깊고 풍성하게 만듭니다.
+          </p>
+        </header>
+
+        <div class="ol-partners-grid">
+          {partners.map((p, i) => (
+            <div class="ol-partner-card">
+              <div class="ol-partner-card-num">
+                {String(i + 1).padStart(2, '0')}
+              </div>
+              <div class="ol-partner-card-body">
+                <h3 class="ol-kr">{p.name}</h3>
+                <p class="ol-partner-card-address ol-kr">{p.address}</p>
+                {p.website ? (
+                  <a
+                    href={p.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="ol-partner-card-link"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="2" y1="12" x2="22" y2="12"/>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    홈페이지 방문
+                  </a>
+                ) : (
+                  <span class="ol-partner-card-no-web">홈페이지 없음</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <footer style="margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--ol-border);">
+          <a href={url('/')} style="font-family: var(--ol-font-mono); font-size: 12.5px; color: var(--ol-muted); text-decoration: none;">← 홈으로</a>
+        </footer>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

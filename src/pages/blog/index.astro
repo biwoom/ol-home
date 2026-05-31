@@ -1,10 +1,34 @@
 ---
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { url } from '../../lib/url';
 
 const posts = await getCollection('blog', e => e.data.published);
 posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/content/blog/**/*.{png,jpg,jpeg,webp,gif,avif}',
+  { eager: true }
+);
+
+const thumbnails: Record<string, ImageMetadata> = {};
+for (const post of posts) {
+  const body = post.body ?? '';
+  const match = body.match(/!\[.*?\]\((\.\/[^)]+)\)/);
+  if (match) {
+    const filename = match[1].replace('./', '');
+    const key = `/src/content/blog/${post.id}/${filename}`;
+    const mod = imageModules[key];
+    if (mod) thumbnails[post.id] = mod.default;
+  }
+}
+
+const PAGE_SIZE = 6;
+
+const categories = [...new Set(posts.map(p => p.data.category).filter(Boolean))] as string[];
+
+const archiveYears = [...new Set(posts.map(p => p.data.date.getFullYear()))].sort((a, b) => b - a);
 ---
 
 <BaseLayout
@@ -30,75 +54,183 @@ posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
     <section class="ol-section-tight">
       <div class="ol-container">
         <div class="ol-row" style="margin-bottom: 16px;">
-          <div class="ol-chips">
-            <button class="ol-chip active">전체 <span class="count">{posts.length}</span></button>
-            <button class="ol-chip">ATLAS</button>
-            <button class="ol-chip">BOOK</button>
-            <button class="ol-chip">DESIGN</button>
-            <button class="ol-chip">AI</button>
-            <button class="ol-chip">회고</button>
+          <div class="ol-chips" id="blog-chips">
+            <button class="ol-chip active" data-category="all">전체 <span class="count">{posts.length}</span></button>
+            {categories.map(cat => {
+              const count = posts.filter(p => p.data.category === cat).length;
+              return (
+                <button class="ol-chip" data-category={cat}>
+                  {cat} <span class="count">{count}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div class="ol-section-grid-sidebar">
           <div>
-            {posts.length === 0 ? (
-              <div style="padding: 48px 0; color: var(--ol-muted); font-family: var(--ol-font-mono); font-size: 13px;">
-                아직 발행된 글이 없습니다.
-              </div>
-            ) : posts.map(post => (
-              <article class="ol-post">
-                <div>
-                  <div class="when">{post.data.date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, ' · ').replace('.', '')}</div>
-                  {post.data.category && (
-                    <span class="ol-badge" style="margin-top: 8px;">{post.data.category}</span>
+            <div id="blog-posts">
+              {posts.length === 0 ? (
+                <div style="padding: 48px 0; color: var(--ol-muted); font-family: var(--ol-font-mono); font-size: 13px;">
+                  아직 발행된 글이 없습니다.
+                </div>
+              ) : posts.map((post, i) => {
+                const hasThumbnail = !!thumbnails[post.id];
+                return (
+                <article
+                  class:list={['ol-post', { 'ol-post--text-only': !hasThumbnail }]}
+                  data-category={post.data.category ?? ''}
+                  data-year={post.data.date.getFullYear()}
+                  data-index={i}
+                  style={i >= PAGE_SIZE ? 'display:none;' : ''}
+                >
+                  {hasThumbnail && (
+                    <div>
+                      <div class="when">{post.data.date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, ' · ').replace('.', '')}</div>
+                      {post.data.category && (
+                        <span class="ol-badge" style="margin-top: 8px;">{post.data.category}</span>
+                      )}
+                      <div style="margin-top: 14px;">
+                        <a href={url(`/blog/${post.id}`)} style="display: block;">
+                          <div style="aspect-ratio: 4/3; overflow: hidden; border-radius: var(--ol-r-md, 6px);">
+                            <Image src={thumbnails[post.id]} alt={post.data.title} style="width: 100%; height: 100%; object-fit: cover;" />
+                          </div>
+                        </a>
+                      </div>
+                    </div>
                   )}
-                  <div style="margin-top: 14px;">
-                    <div class="ol-ph" style="aspect-ratio: 4/3; font-size: 11px;">{post.data.title.toUpperCase()}</div>
+                  <div>
+                    {!hasThumbnail && (
+                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <div class="when">{post.data.date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, ' · ').replace('.', '')}</div>
+                        {post.data.category && (
+                          <span class="ol-badge">{post.data.category}</span>
+                        )}
+                      </div>
+                    )}
+                    <a href={url(`/blog/${post.id}`)} class="ol-post-title-link">
+                      <h3 class="ol-kr">{post.data.title}</h3>
+                    </a>
+                    <p class="ol-kr">{post.data.description}</p>
+                    {post.data.readingTime && (
+                      <div class="meta"><span>{post.data.readingTime}분 읽기</span></div>
+                    )}
+                    <a class="read" href={url(`/blog/${post.id}`)}>전문 읽기 →</a>
                   </div>
-                </div>
-                <div>
-                  <h3 class="ol-kr">{post.data.title}</h3>
-                  <p class="ol-kr">{post.data.description}</p>
-                  {post.data.readingTime && (
-                    <div class="meta"><span>{post.data.readingTime}분 읽기</span></div>
-                  )}
-                  <a class="read" href={url(`/blog/${post.id}`)}>전문 읽기 →</a>
-                </div>
-              </article>
-            ))}
+                </article>
+                );
+              })}
+            </div>
+
+            <div id="blog-no-results" style="display:none; padding: 48px 0; color: var(--ol-muted); font-family: var(--ol-font-mono); font-size: 13px;" class="ol-kr">
+              선택한 필터에 해당하는 글이 없습니다.
+            </div>
+
+            {posts.length > PAGE_SIZE && (
+              <div class="ol-blog-loadmore" id="blog-loadmore-wrap" style="display: flex; justify-content: center; margin-top: 32px;">
+                <button id="blog-loadmore-btn" class="ol-btn ol-btn-outline">
+                  더 보기
+                  <span id="blog-loadmore-remaining">({posts.length - PAGE_SIZE})</span>
+                </button>
+              </div>
+            )}
           </div>
 
           <!-- Sidebar -->
           <aside style="position: sticky; top: 80px;">
             <div class="ol-card" style="padding: 24px;">
               <div class="ol-mono-label">ARCHIVE</div>
-              <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--ol-ink-2);">
-                <div style="display: flex; justify-content: space-between;">
-                  <span class="ol-kr">2026년</span>
-                  <span style="font-family: var(--ol-font-mono); color: var(--ol-muted);">
-                    {posts.filter(p => p.data.date.getFullYear() === 2026).length}
-                  </span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                  <span class="ol-kr">2025년</span>
-                  <span style="font-family: var(--ol-font-mono); color: var(--ol-muted);">
-                    {posts.filter(p => p.data.date.getFullYear() === 2025).length}
-                  </span>
-                </div>
+              <div class="ol-blog-archive-list" id="blog-archive">
+                <button class="ol-blog-archive-btn active" data-year="all">
+                  <span class="ol-kr">전체</span>
+                  <span class="ol-blog-archive-count">{posts.length}</span>
+                </button>
+                {archiveYears.map(year => (
+                  <button class="ol-blog-archive-btn" data-year={String(year)}>
+                    <span class="ol-kr">{year}년</span>
+                    <span class="ol-blog-archive-count">
+                      {posts.filter(p => p.data.date.getFullYear() === year).length}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div class="ol-card" style="margin-top: 16px; padding: 24px;">
-              <div class="ol-mono-label">RSS</div>
-              <p style="margin-top: 8px; font-size: 13px; color: var(--ol-muted); line-height: 1.6;" class="ol-kr">
-                피드 리더로 구독하려면 RSS를 사용하세요.
-              </p>
-              <a href={url('/rss.xml')} class="ol-btn ol-btn-outline" style="margin-top: 12px; font-size: 12px;">RSS 피드</a>
-            </div>
           </aside>
         </div>
       </div>
     </section>
   </main>
 </BaseLayout>
+
+<script>
+  const PAGE_SIZE = 6;
+  let activeCategory = 'all';
+  let activeYear = 'all';
+  let visibleCount = PAGE_SIZE;
+
+  const posts = Array.from(document.querySelectorAll<HTMLElement>('#blog-posts .ol-post'));
+  const noResults = document.getElementById('blog-no-results')!;
+  const loadmoreWrap = document.getElementById('blog-loadmore-wrap');
+  const loadmoreBtn = document.getElementById('blog-loadmore-btn');
+  const loadmoreRemaining = document.getElementById('blog-loadmore-remaining');
+
+  function matchPost(el: HTMLElement): boolean {
+    if (activeCategory !== 'all' && el.dataset.category !== activeCategory) return false;
+    if (activeYear !== 'all' && el.dataset.year !== activeYear) return false;
+    return true;
+  }
+
+  function applyFilters() {
+    visibleCount = PAGE_SIZE;
+    const matched = posts.filter(matchPost);
+    const unmatched = posts.filter(p => !matchPost(p));
+
+    matched.forEach((el, i) => { el.style.display = i < visibleCount ? '' : 'none'; });
+    unmatched.forEach(el => { el.style.display = 'none'; });
+
+    noResults.style.display = matched.length === 0 ? '' : 'none';
+
+    if (loadmoreWrap && loadmoreRemaining) {
+      const remaining = matched.length - visibleCount;
+      if (remaining > 0) {
+        loadmoreWrap.style.display = '';
+        loadmoreRemaining.textContent = `(${remaining})`;
+      } else {
+        loadmoreWrap.style.display = 'none';
+      }
+    }
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('#blog-chips .ol-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.dataset.category ?? 'all';
+      document.querySelectorAll<HTMLElement>('#blog-chips .ol-chip').forEach(b => {
+        b.classList.toggle('active', b === btn);
+      });
+      applyFilters();
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.ol-blog-archive-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeYear = btn.dataset.year ?? 'all';
+      document.querySelectorAll<HTMLElement>('.ol-blog-archive-btn').forEach(b => {
+        b.classList.toggle('active', b === btn);
+      });
+      applyFilters();
+    });
+  });
+
+  loadmoreBtn?.addEventListener('click', () => {
+    const matched = posts.filter(matchPost);
+    visibleCount += PAGE_SIZE;
+    matched.forEach((el, i) => { el.style.display = i < visibleCount ? '' : 'none'; });
+    const remaining = matched.length - visibleCount;
+    if (remaining > 0 && loadmoreRemaining) {
+      loadmoreRemaining.textContent = `(${remaining})`;
+    } else if (loadmoreWrap) {
+      loadmoreWrap.style.display = 'none';
+    }
+  });
+</script>

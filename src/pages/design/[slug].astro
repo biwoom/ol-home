@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { url } from '../../lib/url';
 
 export async function getStaticPaths() {
   const items = await getCollection('design', e => e.data.published);
@@ -12,22 +13,146 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+
+const typeLabel: Record<string, string> = {
+  portrait:     '인물 · 도상',
+  costume:      '복장 · 가사',
+  architecture: '건축 · 사찰',
+  landscape:    '지역 · 자연',
+  manuscript:   '원문 · 필사',
+  artifact:     '유물 · 공예',
+  other:        '기타',
+};
 ---
 
-<BaseLayout title={`${entry.data.title} — OL DESIGN`}>
+<BaseLayout
+  title={`${entry.data.title} — OL DESIGN`}
+  description={entry.data.imageAlt ?? entry.data.title}
+>
   <main>
-    <section class="ol-section">
-      <div class="ol-container" style="max-width: 800px;">
-        <header style="margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--ol-border);">
-          <span class="ol-kicker">{entry.data.category ?? entry.data.type ?? 'DESIGN'}</span>
-          <h1 style="font-size: 36px; margin-top: 8px; letter-spacing: -0.03em;" class="ol-kr">
-            {entry.data.title}
-          </h1>
-        </header>
-        <div class="ol-prose">
-          <Content />
+    <div class="ol-design-detail-wrap">
+      <div class="ol-container">
+
+        <!-- Back -->
+        <nav class="ol-design-detail-nav">
+          <a href={url('/design')} class="ol-design-back-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            DESIGN 아카이브
+          </a>
+        </nav>
+
+        <!-- 2-column detail layout -->
+        <div class="ol-design-detail">
+
+          <!-- Left: image -->
+          <div class="ol-design-detail-img-col">
+            {entry.data.imagePath ? (
+              <div class="ol-design-detail-img-frame">
+                <img
+                  src={url(`/design/${entry.data.imagePath}`)}
+                  alt={entry.data.imageAlt ?? entry.data.title}
+                />
+              </div>
+            ) : (
+              <div class="ol-ph ol-design-detail-img-frame" style="aspect-ratio: 4/3;">
+                NO IMAGE
+              </div>
+            )}
+          </div>
+
+          <!-- Right: metadata + content -->
+          <div class="ol-design-detail-meta-col">
+
+            <!-- Header -->
+            <header class="ol-design-detail-header">
+              {entry.data.type && (
+                <div class="ol-design-detail-type-badge">
+                  {typeLabel[entry.data.type] ?? entry.data.type}
+                </div>
+              )}
+              <h1 class="ol-design-detail-title ol-kr">{entry.data.title}</h1>
+            </header>
+
+            <!-- Metadata table -->
+            <dl class="ol-design-detail-dl">
+              {entry.data.era && (
+                <>
+                  <dt>시대</dt>
+                  <dd class="ol-kr">{entry.data.era}</dd>
+                </>
+              )}
+              {entry.data.region && (
+                <>
+                  <dt>지역</dt>
+                  <dd class="ol-kr">{entry.data.region}</dd>
+                </>
+              )}
+              {entry.data.tradition && (
+                <>
+                  <dt>전통</dt>
+                  <dd class="ol-kr">{entry.data.tradition}</dd>
+                </>
+              )}
+              {entry.data.source && (
+                <>
+                  <dt>출처</dt>
+                  <dd>
+                    {entry.data.sourceUrl ? (
+                      <a href={entry.data.sourceUrl} target="_blank" rel="noopener noreferrer">
+                        {entry.data.source}
+                      </a>
+                    ) : entry.data.source}
+                  </dd>
+                </>
+              )}
+              <dt>라이선스</dt>
+              <dd><span class="ol-code">{entry.data.license}</span></dd>
+            </dl>
+
+            <!-- Download -->
+            {entry.data.imagePath && (
+              <div class="ol-design-detail-download">
+                <a
+                  href={url(`/design/${entry.data.imagePath}`)}
+                  download={entry.data.imagePath}
+                  class="ol-btn ol-btn-outline"
+                  style="width: 100%; justify-content: center;"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 3v13m0 0 4-4m-4 4-4-4M4 21h16"/>
+                  </svg>
+                  이미지 다운로드
+                </a>
+              </div>
+            )}
+
+            <!-- Tags -->
+            {entry.data.tags.length > 0 && (
+              <div class="ol-design-detail-tags">
+                {entry.data.tags.map(tag => (
+                  <a
+                    href={url(`/design?tag=${encodeURIComponent(tag)}`)}
+                    class="ol-design-tag-link"
+                  >
+                    #{tag}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            <div class="ol-divider"></div>
+
+            <!-- Body -->
+            <div class="ol-prose ol-kr" style="font-size: 14px; line-height: 1.75;">
+              <Content />
+            </div>
+
+          </div>
         </div>
+
       </div>
-    </section>
+    </div>
   </main>
 </BaseLayout>

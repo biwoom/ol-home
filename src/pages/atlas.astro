@@ -1,6 +1,22 @@
 ---
+import fs from 'node:fs';
+import path from 'node:path';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { url } from '../lib/url';
+
+const latestDir = path.join(process.cwd(), 'public/atlas/latest');
+const files = fs.readdirSync(latestDir);
+const match = files
+  .map(f => f.match(/^ol-atlas_v(.+)\.html$/))
+  .find(Boolean);
+
+const version = match?.[1] ?? '0.0.0';
+const fileName = match?.[0] ?? 'ol-atlas.html';
+const latestPath = `/atlas/latest/${fileName}`;
+const fileBytes = fs.statSync(path.join(latestDir, fileName)).size;
+const fileSize = fileBytes < 1024 * 1024
+  ? `${(fileBytes / 1024).toFixed(0)} KB`
+  : `${(fileBytes / (1024 * 1024)).toFixed(1)} MB`;
 ---
 
 <BaseLayout
@@ -21,13 +37,13 @@ import { url } from '../lib/url';
           설치도, 서버도 필요하지 않습니다. 만들고, 저장하고, 그대로 누군가에게 보냅니다 — 한 파일 그대로.
         </p>
         <div class="ol-hero-actions">
-          <a class="ol-btn ol-btn-accent" href={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html')} download="ol-atlas_v0.0.6.html">
+          <a class="ol-btn ol-btn-accent" href={url(latestPath)} download={fileName}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 3v13m0 0 4-4m-4 4-4-4M4 21h16"/>
             </svg>
-            v0.0.6 내려받기
+            v{version} 내려받기
           </a>
-          <a class="ol-btn ol-btn-outline" href={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html')} target="_blank" rel="noopener noreferrer">
+          <a class="ol-btn ol-btn-outline" href={url(latestPath)} target="_blank" rel="noopener noreferrer">
             브라우저에서 바로 열기
           </a>
           <a class="ol-btn ol-btn-ghost" href="https://github.com/biwoom/ol-atlas" target="_blank" rel="noopener">
@@ -84,7 +100,7 @@ import { url } from '../lib/url';
 
             <!-- 열기 버튼 -->
             <a
-              href={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html')}
+              href={url(latestPath)}
               id="atlas-open-link"
               target="_blank"
               rel="noopener noreferrer"
@@ -102,14 +118,14 @@ import { url } from '../lib/url';
           <!-- iframe 컨테이너 (data-active로 활성 뷰 제어) -->
           <div class="atlas-preview-wrap" data-active="home">
             <iframe
-              src={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html')}
+              src={url(latestPath)}
               class="atlas-preview-iframe"
               data-view="home"
               tabindex="-1"
               title="OL ATLAS 홈 미리보기"
             ></iframe>
             <iframe
-              src={url('/atlas/v0.0.6/ol-atlas_v0.0.6.html#kanban')}
+              src={url(`${latestPath}#kanban`)}
               class="atlas-preview-iframe"
               data-view="kanban"
               tabindex="-1"
@@ -195,23 +211,17 @@ import { url } from '../lib/url';
 
           <aside>
             <div class="ol-card" style="position: sticky; top: 88px;">
-              <span class="ol-mono-label">DOWNLOAD · v0.4.2</span>
+              <span class="ol-mono-label">DOWNLOAD · v{version}</span>
               <h3 style="font-size: 22px; margin-top: 8px; letter-spacing: -0.02em;" class="ol-kr">지금 받기</h3>
               <p style="color: var(--ol-muted); font-size: 13.5px; margin-top: 6px;" class="ol-kr">한 파일을 받아 더블클릭하면 끝입니다.</p>
 
               <div style="display: grid; gap: 8px; margin-top: 20px;">
-                <a class="ol-btn ol-btn-outline" style="justify-content: space-between; height: 48px; padding: 0 16px;">
+                <a class="ol-btn ol-btn-outline" style="justify-content: space-between; height: 48px; padding: 0 16px;" href={url(latestPath)} download={fileName}>
                   <span style="display: flex; align-items: center; gap: 10px;">
                     <span class="ol-code" style="background: var(--ol-ink); color: var(--ol-bg); border-color: transparent;">HTML</span>
-                    atlas-v0.0.4.html
+                    {fileName}
                   </span>
-                  <span style="font-family: var(--ol-font-mono); font-size: 11px; color: var(--ol-muted);">0.5 MB</span>
-                </a>
-                <a class="ol-btn ol-btn-outline" style="justify-content: space-between; height: 48px; padding: 0 16px;">
-                  <span style="display: flex; align-items: center; gap: 10px;">
-                    <span class="ol-code">ZIP</span>atlas-v0.0.4-bundle.zip
-                  </span>
-                  <span style="font-family: var(--ol-font-mono); font-size: 11px; color: var(--ol-muted);">1 MB</span>
+                  <span style="font-family: var(--ol-font-mono); font-size: 11px; color: var(--ol-muted);">{fileSize}</span>
                 </a>
                 <a class="ol-btn ol-btn-outline" style="justify-content: space-between; height: 48px; padding: 0 16px;" href="https://github.com/biwoom/ol-atlas" target="_blank" rel="noopener">
                   <span style="display: flex; align-items: center; gap: 10px;">

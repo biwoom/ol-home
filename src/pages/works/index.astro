@@ -27,6 +27,9 @@ const statusLabel: Record<string, string> = {
   ready:     '완료',
   published: '출판됨',
 };
+
+const categories = [...new Set(allWorks.map(w => w.data.category).filter(Boolean))] as string[];
+const allTags = [...new Set(allWorks.flatMap(w => w.data.tags))].sort((a, b) => a.localeCompare(b, 'ko'));
 ---
 
 <WorksLayout title="OL WORKS — 제작 중인 원고들">
@@ -42,51 +45,116 @@ const statusLabel: Record<string, string> = {
       </p>
     </div>
 
-    {Object.entries(groups).map(([series, entries]) => (
-      <section style="margin-bottom: 48px;">
-        <h2 class="ol-kicker" style="margin-bottom: 14px;">
-          {formatSeries(series)} · {entries.length}편
-        </h2>
-
-        <div style="display: flex; flex-direction: column; border: 1px solid var(--ol-border); border-radius: var(--ol-r-lg); overflow: hidden;">
-          {entries.map((entry, i) => (
-            <a
-              href={url(`/works/${entry.id}`)}
-              style={[
-                'display:flex;align-items:center;justify-content:space-between;',
-                'padding:16px 20px;background:var(--ol-surface);text-decoration:none;',
-                'color:inherit;transition:background 100ms ease;',
-                i > 0 ? 'border-top:1px solid var(--ol-border);' : '',
-              ].join('')}
-              onmouseover="this.style.background='var(--ol-surface-2)'"
-              onmouseout="this.style.background='var(--ol-surface)'"
-            >
-              <div style="display:flex;align-items:center;gap:14px;">
-                <span class="ol-mono-label" style="min-width:24px;text-align:right;">
-                  {String(entry.data.chapter ?? (i + 1)).padStart(2, '0')}
-                </span>
-                <div>
-                  <div style="font-size:15px;font-weight:600;color:var(--ol-ink);" class="ol-kr">
-                    {entry.data.title}
-                  </div>
-                  {entry.data.excerpt && (
-                    <div style="font-size:13px;color:var(--ol-muted);margin-top:3px;line-height:1.5;" class="ol-kr">
-                      {entry.data.excerpt}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-                <span class={`ol-works-status ol-works-status--${entry.data.status ?? 'draft'}`}>
-                  {statusLabel[entry.data.status ?? 'draft']}
-                </span>
-                <span style="color:var(--ol-subtle, #a3a3a3);">→</span>
-              </div>
-            </a>
-          ))}
+    <div class="ol-works-filter-row" style="margin-bottom: 32px;">
+      {categories.length > 0 && (
+        <div class="ol-chips" id="works-chips">
+          <button class="ol-chip active" data-category="all">전체 <span class="count">{allWorks.length}</span></button>
+          {categories.map(cat => {
+            const count = allWorks.filter(w => w.data.category === cat).length;
+            return (
+              <button class="ol-chip" data-category={cat}>
+                {cat} <span class="count">{count}</span>
+              </button>
+            );
+          })}
         </div>
-      </section>
-    ))}
+      )}
+
+      {allTags.length > 0 && (
+        <div class="ol-tag-dropdown" id="works-tag-dropdown">
+          <button class="ol-tag-dropdown-trigger" id="works-tag-trigger" aria-expanded="false">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            태그
+            <span class="ol-tag-dropdown-badge" id="works-tag-badge" style="display:none;">0</span>
+            <svg class="ol-tag-dropdown-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="ol-tag-dropdown-panel" id="works-tag-panel">
+            <div class="ol-tag-dropdown-header">
+              <span class="ol-mono-label">TAGS</span>
+              <button class="ol-tag-dropdown-clear" id="works-tag-clear">초기화</button>
+            </div>
+            <div class="ol-tag-dropdown-list">
+              {allTags.map(tag => {
+                const count = allWorks.filter(w => w.data.tags.includes(tag)).length;
+                return (
+                  <label class="ol-tag-dropdown-item">
+                    <input type="checkbox" value={tag} />
+                    <span class="ol-kr">{tag}</span>
+                    <span class="ol-tag-dropdown-count">{count}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
+    <div id="works-sections">
+      {Object.entries(groups).map(([series, entries]) => {
+        const seriesCategories = [...new Set(entries.map(e => e.data.category).filter(Boolean))];
+        return (
+          <section class="ol-works-series" data-categories={seriesCategories.join(',')} style="margin-bottom: 48px;">
+            <button class="ol-works-series-toggle" aria-expanded="true">
+              <h2 class="ol-kicker" style="margin: 0;">
+                {formatSeries(series)} · <span class="ol-works-series-count">{entries.length}</span>편
+              </h2>
+              <svg class="ol-works-series-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            <div class="ol-works-series-body">
+              <div style="display: flex; flex-direction: column; border: 1px solid var(--ol-border); border-radius: var(--ol-r-lg); overflow: hidden;">
+                {entries.map((entry, i) => (
+                  <a
+                    href={url(`/works/${entry.id}`)}
+                    class="ol-works-entry"
+                    data-category={entry.data.category ?? ''}
+                    data-tags={entry.data.tags.join(',')}
+                    style={[
+                      'display:flex;align-items:center;justify-content:space-between;',
+                      'padding:16px 20px;background:var(--ol-surface);text-decoration:none;',
+                      'color:inherit;transition:background 100ms ease;',
+                      i > 0 ? 'border-top:1px solid var(--ol-border);' : '',
+                    ].join('')}
+                    onmouseover="this.style.background='var(--ol-surface-2)'"
+                    onmouseout="this.style.background='var(--ol-surface)'"
+                  >
+                    <div style="display:flex;align-items:center;gap:14px;">
+                      <span class="ol-mono-label" style="min-width:24px;text-align:right;">
+                        {String(entry.data.chapter ?? (i + 1)).padStart(2, '0')}
+                      </span>
+                      <div>
+                        <div style="font-size:15px;font-weight:600;color:var(--ol-ink);" class="ol-kr">
+                          {entry.data.title}
+                        </div>
+                        {entry.data.excerpt && (
+                          <div style="font-size:13px;color:var(--ol-muted);margin-top:3px;line-height:1.5;" class="ol-kr">
+                            {entry.data.excerpt}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                      <span class={`ol-works-status ol-works-status--${entry.data.status ?? 'draft'}`}>
+                        {statusLabel[entry.data.status ?? 'draft']}
+                      </span>
+                      <span style="color:var(--ol-subtle, #a3a3a3);">→</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })}
+    </div>
 
     {allWorks.length === 0 && (
       <div style="text-align:center;padding:80px 0;color:var(--ol-muted);">
@@ -95,3 +163,110 @@ const statusLabel: Record<string, string> = {
     )}
   </div>
 </WorksLayout>
+
+<script>
+  let activeCategory = 'all';
+  let activeTags: Set<string> = new Set();
+
+  const sections = Array.from(document.querySelectorAll<HTMLElement>('.ol-works-series'));
+
+  const trigger = document.getElementById('works-tag-trigger');
+  const panel = document.getElementById('works-tag-panel');
+  const badge = document.getElementById('works-tag-badge');
+  const clearBtn = document.getElementById('works-tag-clear');
+  const checkboxes = Array.from(
+    document.querySelectorAll<HTMLInputElement>('#works-tag-panel input[type="checkbox"]')
+  );
+
+  function matchEntry(el: HTMLElement): boolean {
+    if (activeCategory !== 'all' && el.dataset.category !== activeCategory) return false;
+    if (activeTags.size > 0) {
+      const entryTags = (el.dataset.tags ?? '').split(',').filter(Boolean);
+      for (const t of activeTags) {
+        if (!entryTags.includes(t)) return false;
+      }
+    }
+    return true;
+  }
+
+  function applyWorksFilter() {
+    sections.forEach(section => {
+      const sectionEntries = Array.from(section.querySelectorAll<HTMLElement>('.ol-works-entry'));
+      const matched = sectionEntries.filter(matchEntry);
+
+      if (matched.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = '';
+      sectionEntries.forEach(e => { e.style.display = matchEntry(e) ? '' : 'none'; });
+      const countEl = section.querySelector('.ol-works-series-count');
+      if (countEl) countEl.textContent = String(matched.length);
+    });
+
+    if (badge) {
+      if (activeTags.size > 0) {
+        badge.textContent = String(activeTags.size);
+        badge.style.display = '';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
+
+  // Category chips
+  document.querySelectorAll<HTMLButtonElement>('#works-chips .ol-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.dataset.category ?? 'all';
+      document.querySelectorAll<HTMLElement>('#works-chips .ol-chip').forEach(b => {
+        b.classList.toggle('active', b === btn);
+      });
+      applyWorksFilter();
+    });
+  });
+
+  // Tag dropdown toggle
+  trigger?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = trigger.getAttribute('aria-expanded') === 'true';
+    trigger.setAttribute('aria-expanded', String(!open));
+  });
+
+  panel?.addEventListener('click', (e) => { e.stopPropagation(); });
+
+  document.addEventListener('click', () => {
+    trigger?.setAttribute('aria-expanded', 'false');
+  });
+
+  // Tag checkboxes
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) {
+        activeTags.add(cb.value);
+      } else {
+        activeTags.delete(cb.value);
+      }
+      applyWorksFilter();
+    });
+  });
+
+  // Clear tags
+  clearBtn?.addEventListener('click', () => {
+    activeTags.clear();
+    checkboxes.forEach(cb => { cb.checked = false; });
+    applyWorksFilter();
+  });
+
+  // Series toggle
+  document.querySelectorAll<HTMLButtonElement>('.ol-works-series-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      const body = btn.nextElementSibling as HTMLElement | null;
+      if (body) {
+        body.style.display = expanded ? 'none' : '';
+      }
+    });
+  });
+</script>
