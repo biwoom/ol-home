@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://biwoom.github.io/ol-home/sitemap-index.xml

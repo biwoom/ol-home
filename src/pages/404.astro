@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../lib/url';
+---
+
+<BaseLayout title="404 — 페이지를 찾을 수 없습니다" description="요청한 페이지가 존재하지 않습니다.">
+  <main>
+    <section style="display:flex;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:80px 24px;">
+      <div>
+        <div style="font-family:var(--ol-font-mono);font-size:72px;font-weight:700;color:var(--ol-border);letter-spacing:-0.04em;">404</div>
+        <h1 style="font-size:22px;margin-top:16px;letter-spacing:-0.02em;" class="ol-kr">
+          길을 잃었습니다.
+        </h1>
+        <p style="color:var(--ol-muted);font-size:14px;margin-top:12px;max-width:36ch;margin-left:auto;margin-right:auto;line-height:1.7;" class="ol-kr">
+          요청한 페이지가 존재하지 않거나 이동되었습니다.<br>
+          아래 링크에서 다시 시작해 보세요.
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:28px;">
+          <a href={url('/')} class="ol-btn ol-btn-primary ol-btn-sm">홈으로</a>
+          <a href={url('/atlas')} class="ol-btn ol-btn-outline ol-btn-sm">ATLAS</a>
+          <a href={url('/book')} class="ol-btn ol-btn-outline ol-btn-sm">BOOK</a>
+          <a href={url('/works')} class="ol-btn ol-btn-outline ol-btn-sm">WORKS</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

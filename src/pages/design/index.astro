@@ -2,27 +2,12 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { url } from '../../lib/url';
+import { typeLabel, typeOrder } from '../../lib/design';
 
 const allItems = await getCollection('design', e => e.data.published);
 allItems.sort((a, b) => a.data.title.localeCompare(b.data.title, 'ko'));
 
 const PAGE_SIZE = 12;
-
-const typeLabel: Record<string, string> = {
-  illustration: '삽화',
-  infographic:  '인포그래픽',
-  poster:       '포스터',
-  turnaround:   '턴어라운드',
-  portrait:     '인물 · 도상',
-  costume:      '복장 · 가사',
-  architecture: '건축 · 사찰',
-  landscape:    '지역 · 자연',
-  manuscript:   '원문 · 필사',
-  artifact:     '유물 · 공예',
-  other:        '기타',
-};
-
-const typeOrder = ['illustration', 'infographic', 'poster', 'turnaround', 'portrait', 'costume', 'architecture', 'landscape', 'manuscript', 'artifact', 'other'];
 
 const typeCounts = allItems.reduce((acc, item) => {
   const t = item.data.type ?? 'other';
@@ -152,6 +137,7 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
                         src={url(`/design/${item.data.imagePath}`)}
                         alt={item.data.imageAlt ?? item.data.title}
                         loading={i < 6 ? 'eager' : 'lazy'}
+                        decoding="async"
                       />
                     ) : (
                       <div class="ol-ph" style="width:100%;height:100%;">
@@ -195,6 +181,7 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
       </div>
     </section>
   </main>
+  <script type="application/json" id="design-type-labels" set:html={JSON.stringify(typeLabel)} />
 </BaseLayout>
 
 <script>
@@ -283,13 +270,7 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
     return span;
   }
 
-  const typeLabels: Record<string, string> = {
-    illustration: '삽화', infographic: '인포그래픽',
-    poster: '포스터', turnaround: '턴어라운드',
-    portrait: '인물 · 도상', costume: '복장 · 가사',
-    architecture: '건축 · 사찰', landscape: '지역 · 자연',
-    manuscript: '원문 · 필사', artifact: '유물 · 공예', other: '기타',
-  };
+  const typeLabels: Record<string, string> = JSON.parse(document.getElementById('design-type-labels')!.textContent!);
 
   // ─── category buttons ─────────────────────────────────────
   document.querySelectorAll<HTMLButtonElement>('.ol-design-cat-btn').forEach(btn => {
