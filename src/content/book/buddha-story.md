@@ -3,6 +3,7 @@ title: "buddha story"
 series: "OL 붓다 스토리"
 category: "인물 · 행적"
 version: "v0.0.4"
+status: "draft"
 publishedAt: 2026-05-29
 htmlPath: "buddha-story"
 primaryEntities: []

@@ -1,6 +1,10 @@
 ---
 title: "WALL·E 기계 설계도 — 정·측·후·상면 도면"
-type: artifact
+type: turnaround
+series: "WALL·E 캐릭터 시트"
+medium: "vector"
+scriptureRef: ""
+dimensions: "2400×1800"
 era: "2008"
 region: "픽사 애니메이션 스튜디오"
 tradition: "서양 애니메이션"

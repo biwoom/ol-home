@@ -10,6 +10,13 @@ const books = (
 const PAGE_SIZE = 8;
 
 const allTags = [...new Set(books.flatMap(b => b.data.tags))].sort((a, b) => a.localeCompare(b, 'ko'));
+
+const statusLabel: Record<string, string> = {
+  draft:     '초고',
+  revising:  '수정중',
+  ready:     '완료',
+  published: '출판됨',
+};
 ---
 
 <BaseLayout
@@ -77,9 +84,12 @@ const allTags = [...new Set(books.flatMap(b => b.data.tags))].sort((a, b) => a.l
                 style={`display:flex;flex-direction:column;gap:20px;${i >= PAGE_SIZE ? 'display:none;' : ''}`}
               >
                 <div>
-                  <span class="ol-mono-label" style="margin-bottom:8px;display:block;">
-                    {new Date(book.data.publishedAt).getFullYear()} · {book.data.version}
-                    {book.data.level && ` · 난이도 ${book.data.level}/5`}
+                  <span class="ol-mono-label" style="margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+                    <span>{new Date(book.data.publishedAt).getFullYear()} · {book.data.version}</span>
+                    <span class={`ol-works-status ol-works-status--${book.data.status ?? 'draft'}`}>
+                      {statusLabel[book.data.status ?? 'draft']}
+                    </span>
+                    {book.data.level && <span>· 난이도 {book.data.level}/5</span>}
                   </span>
                   <h2 style="font-size:22px;margin:0 0 8px;" class="ol-kr">
                     {book.data.title}

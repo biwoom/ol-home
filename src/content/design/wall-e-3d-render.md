@@ -1,6 +1,10 @@
 ---
 title: "WALL·E 3D 렌더 — 다각도 턴어라운드"
-type: portrait
+type: turnaround
+series: "WALL·E 캐릭터 시트"
+medium: "3D rendering"
+scriptureRef: ""
+dimensions: "3840×2160"
 era: "2008"
 region: "픽사 애니메이션 스튜디오"
 tradition: "서양 애니메이션"

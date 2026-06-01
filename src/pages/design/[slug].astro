@@ -15,6 +15,10 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 
 const typeLabel: Record<string, string> = {
+  illustration: '삽화',
+  infographic:  '인포그래픽',
+  poster:       '포스터',
+  turnaround:   '턴어라운드',
   portrait:     '인물 · 도상',
   costume:      '복장 · 가사',
   architecture: '건축 · 사찰',
@@ -77,6 +81,18 @@ const typeLabel: Record<string, string> = {
 
             <!-- Metadata table -->
             <dl class="ol-design-detail-dl">
+              {entry.data.series && (
+                <>
+                  <dt>시리즈</dt>
+                  <dd class="ol-kr">{entry.data.series}</dd>
+                </>
+              )}
+              {entry.data.scriptureRef && (
+                <>
+                  <dt>출전</dt>
+                  <dd class="ol-kr">{entry.data.scriptureRef}</dd>
+                </>
+              )}
               {entry.data.era && (
                 <>
                   <dt>시대</dt>
@@ -93,6 +109,18 @@ const typeLabel: Record<string, string> = {
                 <>
                   <dt>전통</dt>
                   <dd class="ol-kr">{entry.data.tradition}</dd>
+                </>
+              )}
+              {entry.data.medium && (
+                <>
+                  <dt>매체</dt>
+                  <dd>{entry.data.medium}</dd>
+                </>
+              )}
+              {entry.data.dimensions && (
+                <>
+                  <dt>크기</dt>
+                  <dd>{entry.data.dimensions}</dd>
                 </>
               )}
               {entry.data.source && (

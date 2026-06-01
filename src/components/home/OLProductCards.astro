@@ -1,5 +1,15 @@
 ---
 import { url } from '../../lib/url';
+import { getCollection } from 'astro:content';
+import fs from 'node:fs';
+
+const works = await getCollection('works', ({ data }) => data.published);
+const books = await getCollection('book', ({ data }) => data.published);
+const blogs = await getCollection('blog', ({ data }) => data.published);
+const designs = await getCollection('design', ({ data }) => data.published);
+
+const atlasFiles = fs.readdirSync('public/atlas/latest').filter(f => f.endsWith('.html'));
+const atlasVersion = atlasFiles[0]?.match(/v([\d.]+)/)?.[1] ?? '0.0.0';
 ---
 <section class="ol-section">
   <div class="ol-container">
@@ -16,7 +26,7 @@ import { url } from '../../lib/url';
         <h3>OL ATLAS</h3>
         <p class="ol-kr">단일 HTML 파일로 만들어진 불교 콘텐츠 제작·열람 도구. 설치 없이 브라우저 하나면 충분합니다.</p>
         <div class="ol-product-foot">
-          <span class="ol-code">v0.4.2</span>
+          <span class="ol-code">v{atlasVersion}</span>
           <span class="ol-arrow">→</span>
         </div>
       </a>
@@ -27,7 +37,7 @@ import { url } from '../../lib/url';
         <h3>OL WORKS</h3>
         <p class="ol-kr">완결 이전의 초고, 번역 초안, 주석 연구를 공개합니다.</p>
         <div class="ol-product-foot">
-          <span class="ol-code">42 posts</span>
+          <span class="ol-code">{works.length} posts</span>
           <span class="ol-arrow">→</span>
         </div>
       </a>
@@ -38,7 +48,7 @@ import { url } from '../../lib/url';
         <h3>OL BOOK</h3>
         <p class="ol-kr">OL이 제작한 불교 콘텐츠 모음. 붓다스토리, 담마빠다, 중관학 강의, 선림 시리즈 등 ATLAS 위에서 동작합니다.</p>
         <div class="ol-product-foot">
-          <span class="ol-code">12 권 / 진행 중</span>
+          <span class="ol-code">{books.length} 권 / 진행 중</span>
           <span class="ol-arrow">→</span>
         </div>
       </a>
@@ -49,7 +59,7 @@ import { url } from '../../lib/url';
         <h3>OL DESIGN</h3>
         <p class="ol-kr">불교 콘텐츠를 위한 스타일 레퍼런스 — 인물·복장·건물·지역환경·원문 데이터. 저작권 개방.</p>
         <div class="ol-product-foot">
-          <span class="ol-code">CC0 · 1,240 assets</span>
+          <span class="ol-code">CC0 · {designs.length} assets</span>
           <span class="ol-arrow">→</span>
         </div>
       </a>
@@ -71,7 +81,7 @@ import { url } from '../../lib/url';
         <h3>OL BLOG</h3>
         <p class="ol-kr">OL 콘텐츠를 만들고 고쳐가는 과정의 기록. 결정과 회고, 작은 발견들.</p>
         <div class="ol-product-foot">
-          <span class="ol-code">42 posts</span>
+          <span class="ol-code">{blogs.length} posts</span>
           <span class="ol-arrow">→</span>
         </div>
       </a>

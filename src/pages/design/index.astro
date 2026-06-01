@@ -9,6 +9,10 @@ allItems.sort((a, b) => a.data.title.localeCompare(b.data.title, 'ko'));
 const PAGE_SIZE = 12;
 
 const typeLabel: Record<string, string> = {
+  illustration: '삽화',
+  infographic:  '인포그래픽',
+  poster:       '포스터',
+  turnaround:   '턴어라운드',
   portrait:     '인물 · 도상',
   costume:      '복장 · 가사',
   architecture: '건축 · 사찰',
@@ -18,7 +22,7 @@ const typeLabel: Record<string, string> = {
   other:        '기타',
 };
 
-const typeOrder = ['portrait', 'costume', 'architecture', 'landscape', 'manuscript', 'artifact', 'other'];
+const typeOrder = ['illustration', 'infographic', 'poster', 'turnaround', 'portrait', 'costume', 'architecture', 'landscape', 'manuscript', 'artifact', 'other'];
 
 const typeCounts = allItems.reduce((acc, item) => {
   const t = item.data.type ?? 'other';
@@ -158,6 +162,7 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
                   <div class="ol-design-card-meta">
                     <div class="ol-design-card-type">
                       {item.data.type ? typeLabel[item.data.type] : 'DESIGN'}
+                      {item.data.series && <span class="ol-design-card-series"> · {item.data.series}</span>}
                     </div>
                     <h3 class="ol-design-card-title ol-kr">{item.data.title}</h3>
                     {item.data.era && (
@@ -279,6 +284,8 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
   }
 
   const typeLabels: Record<string, string> = {
+    illustration: '삽화', infographic: '인포그래픽',
+    poster: '포스터', turnaround: '턴어라운드',
     portrait: '인물 · 도상', costume: '복장 · 가사',
     architecture: '건축 · 사찰', landscape: '지역 · 자연',
     manuscript: '원문 · 필사', artifact: '유물 · 공예', other: '기타',

@@ -1,6 +1,10 @@
 ---
 title: "WALL·E 초기 콘셉트 스케치 — 이동 방식 탐구"
-type: manuscript
+type: illustration
+series: "WALL·E 캐릭터 시트"
+medium: "pencil sketch"
+scriptureRef: ""
+dimensions: "1920×1080"
 era: "2005 — 2007 (제작 개발기)"
 region: "픽사 애니메이션 스튜디오"
 tradition: "서양 애니메이션"
