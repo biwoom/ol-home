@@ -200,7 +200,7 @@ const allTags = [...new Set(allWorks.flatMap(w => w.data.tags))].sort((a, b) => 
       }
 
       section.style.display = '';
-      sectionEntries.forEach(e => { e.style.display = matchEntry(e) ? '' : 'none'; });
+      sectionEntries.forEach(e => { e.style.display = matchEntry(e) ? 'flex' : 'none'; });
       const countEl = section.querySelector('.ol-works-series-count');
       if (countEl) countEl.textContent = String(matched.length);
     });
