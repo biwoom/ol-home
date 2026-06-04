@@ -1293,6 +1293,8 @@ a { color: inherit; }
   margin: 1em 0;
   padding-left: 1.5em;
 }
+.ol-prose ul { list-style: disc; }
+.ol-prose ol { list-style: decimal; }
 .ol-prose li { margin: 0.35em 0; }
 .ol-prose li::marker { color: var(--ol-muted); }
 
@@ -1993,6 +1995,25 @@ body {
   gap: 10px;
   margin-top: 12px;
   flex-wrap: wrap;
+}
+
+.ol-works-rights {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--ol-border);
+  border-radius: var(--ol-r-sm, 4px);
+  background: var(--ol-surface);
+  color: var(--ol-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.ol-works-rights a {
+  color: var(--ol-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* 모바일 드로어 닫기 버튼 (데스크탑에서 숨김) */

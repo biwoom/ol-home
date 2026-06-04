@@ -5,6 +5,12 @@ date: 2026-06-04
 category: OL
 readingTime: 6
 tags: ["DESIGN", "WORKS", "인포그래픽", "문서라이브러리"]
+prefixTags:
+  - "kind:blog"
+  - "project:design"
+  - "project:works"
+  - "topic:infographic-library"
+  - "topic:document-library"
 published: true
 ---
 

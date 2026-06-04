@@ -25,7 +25,7 @@ const kindCounts = allItems.reduce((acc, item) => {
   return acc;
 }, {} as Record<string, number>);
 
-const allTags = [...new Set(allItems.flatMap(i => [...i.data.prefixTags, ...i.data.tags]))]
+const allTags = [...new Set(allItems.flatMap(i => i.data.tags))]
   .sort((a, b) => a.localeCompare(b, 'ko'));
 
 function assetUrl(path?: string) {
@@ -101,7 +101,7 @@ function itemFormats(item: typeof allItems[number]) {
 
               {allTags.length > 0 && (
                 <div class="ol-design-filter-group">
-                  <div class="ol-design-filter-label">PREFIX TAGS</div>
+                  <div class="ol-design-filter-label">TAGS</div>
                   <div class="ol-design-tag-cloud">
                     {allTags.map(tag => (
                       <button class="ol-design-tag-btn" data-filter-tag={tag}>
@@ -140,7 +140,7 @@ function itemFormats(item: typeof allItems[number]) {
             <div class="ol-design-grid" id="design-grid">
               {allItems.map((item, i) => {
                 const previewPath = item.data.thumbnailPath ?? item.data.imagePath;
-                const tags = [...item.data.prefixTags, ...item.data.tags];
+                const tags = item.data.tags;
                 const formats = itemFormats(item);
                 return (
                   <a
@@ -225,6 +225,8 @@ function itemFormats(item: typeof allItems[number]) {
   const loadmoreBtn = document.getElementById('design-loadmore-btn');
   const loadmoreRemaining = document.getElementById('design-loadmore-remaining');
   const kindLabels: Record<string, string> = JSON.parse(document.getElementById('design-kind-labels')!.textContent!);
+  const kindButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.ol-design-cat-btn'));
+  const tagButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.ol-design-tag-btn'));
 
   function matchCard(card: HTMLElement): boolean {
     const kind = card.dataset.kind ?? 'infographic';
@@ -234,7 +236,22 @@ function itemFormats(item: typeof allItems[number]) {
     return true;
   }
 
-  function applyFilters() {
+  function updateUrl() {
+    const nextUrl = new URL(window.location.href);
+    if (activeKind !== 'all') {
+      nextUrl.searchParams.set('kind', activeKind);
+    } else {
+      nextUrl.searchParams.delete('kind');
+    }
+    if (activeTag) {
+      nextUrl.searchParams.set('tag', activeTag);
+    } else {
+      nextUrl.searchParams.delete('tag');
+    }
+    window.history.replaceState({}, '', nextUrl);
+  }
+
+  function applyFilters({ syncUrl = true } = {}) {
     const matched = cards.filter(matchCard);
     const unmatched = cards.filter(c => !matchCard(c));
 
@@ -259,6 +276,7 @@ function itemFormats(item: typeof allItems[number]) {
     }
 
     updateFilterPills();
+    if (syncUrl) updateUrl();
   }
 
   function updateFilterPills() {
@@ -266,7 +284,7 @@ function itemFormats(item: typeof allItems[number]) {
     if (activeKind !== 'all') {
       activeFiltersEl.appendChild(makePill(kindLabels[activeKind] ?? activeKind, () => {
         activeKind = 'all';
-        document.querySelectorAll<HTMLElement>('.ol-design-cat-btn').forEach(b => {
+        kindButtons.forEach(b => {
           b.classList.toggle('active', b.dataset.filterKind === 'all');
         });
         applyFilters();
@@ -275,7 +293,7 @@ function itemFormats(item: typeof allItems[number]) {
     if (activeTag) {
       activeFiltersEl.appendChild(makePill(`#${activeTag}`, () => {
         activeTag = null;
-        document.querySelectorAll<HTMLElement>('.ol-design-tag-btn').forEach(b => b.classList.remove('active'));
+        tagButtons.forEach(b => b.classList.remove('active'));
         applyFilters();
       }));
     }
@@ -289,17 +307,17 @@ function itemFormats(item: typeof allItems[number]) {
     return span;
   }
 
-  document.querySelectorAll<HTMLButtonElement>('.ol-design-cat-btn').forEach(btn => {
+  kindButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       activeKind = btn.dataset.filterKind ?? 'all';
-      document.querySelectorAll<HTMLElement>('.ol-design-cat-btn').forEach(b => {
+      kindButtons.forEach(b => {
         b.classList.toggle('active', b === btn);
       });
       applyFilters();
     });
   });
 
-  document.querySelectorAll<HTMLButtonElement>('.ol-design-tag-btn').forEach(btn => {
+  tagButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const tag = btn.dataset.filterTag ?? '';
       if (activeTag === tag) {
@@ -307,7 +325,7 @@ function itemFormats(item: typeof allItems[number]) {
         btn.classList.remove('active');
       } else {
         activeTag = tag;
-        document.querySelectorAll<HTMLElement>('.ol-design-tag-btn').forEach(b => b.classList.remove('active'));
+        tagButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       }
       applyFilters();
@@ -325,4 +343,26 @@ function itemFormats(item: typeof allItems[number]) {
       loadmoreWrap.style.display = 'none';
     }
   });
+
+  const initialParams = new URLSearchParams(window.location.search);
+  const initialKind = initialParams.get('kind');
+  const initialTag = initialParams.get('tag');
+
+  if (initialKind && kindButtons.some(btn => btn.dataset.filterKind === initialKind)) {
+    activeKind = initialKind;
+    kindButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filterKind === initialKind);
+    });
+  }
+
+  if (initialTag && tagButtons.some(btn => btn.dataset.filterTag === initialTag)) {
+    activeTag = initialTag;
+    tagButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filterTag === initialTag);
+    });
+  }
+
+  if (initialKind || initialTag) {
+    applyFilters({ syncUrl: false });
+  }
 </script>

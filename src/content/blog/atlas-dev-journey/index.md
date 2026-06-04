@@ -5,6 +5,11 @@ date: 2026-05-27
 category: ATLAS
 readingTime: 12
 tags: ["ATLAS", "개발", "단일HTML"]
+prefixTags:
+  - "kind:blog"
+  - "project:atlas"
+  - "topic:development"
+  - "format:single-html"
 published: true
 ---
 

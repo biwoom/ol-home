@@ -5,6 +5,12 @@ date: 2026-05-30
 category: OL
 readingTime: 10
 tags: ["개발", "Astro", "검색"]
+prefixTags:
+  - "kind:blog"
+  - "project:ol-home"
+  - "topic:development"
+  - "framework:astro"
+  - "feature:search"
 published: true
 ---
 

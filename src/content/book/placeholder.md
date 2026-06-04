@@ -6,6 +6,10 @@ htmlPath: "placeholder"
 primaryEntities: []
 description: "첫 번째 완결 BOOK이 곧 출판됩니다."
 tags: []
+prefixTags:
+  - "kind:book"
+  - "status:placeholder"
+license: "CC0"
 published: false
 ---
 

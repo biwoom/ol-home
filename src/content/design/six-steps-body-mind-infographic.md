@@ -5,7 +5,7 @@ summary: "정화 수행 여섯 단계 안내"
 primaryKind: infographic
 type: flowchart
 format: mixed
-series: "불교명상 기초수행"
+series: "불교명상"
 version: "260531"
 status: published
 date: 2026-06-04
@@ -23,8 +23,10 @@ pageSize: "A4"
 orientation: portrait
 medium: "HTML/CSS, PDF"
 source: "OL Project"
-credits: ["비구 담진"]
+credits: ["비움"]
 license: "CC0"
+relatedWorks:
+  - "body-mind-transformation/01-six-steps"
 
 prefixTags:
   - "kind:infographic"

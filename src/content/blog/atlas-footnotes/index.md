@@ -5,6 +5,12 @@ date: 2026-05-31
 category: ATLAS
 readingTime: 7
 tags: ["ATLAS", "개발", "마크다운"]
+prefixTags:
+  - "kind:blog"
+  - "project:atlas"
+  - "topic:development"
+  - "topic:markdown"
+  - "feature:footnotes"
 published: true
 ---
 

@@ -5,6 +5,12 @@ date: 2026-06-01
 category: ATLAS
 readingTime: 7
 tags: ["개발", "리팩토링", "유지보수"]
+prefixTags:
+  - "kind:blog"
+  - "project:atlas"
+  - "topic:development"
+  - "topic:refactoring"
+  - "topic:maintenance"
 published: true
 ---
 

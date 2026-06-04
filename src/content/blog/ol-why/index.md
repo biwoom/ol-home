@@ -5,6 +5,11 @@ date: 2026-05-23
 category: OL
 readingTime: 8
 tags: ["선언문", "브랜드"]
+prefixTags:
+  - "kind:blog"
+  - "project:ol-home"
+  - "topic:manifesto"
+  - "topic:brand"
 published: true
 ---
 

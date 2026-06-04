@@ -5,6 +5,12 @@ date: 2026-05-31
 category: OL
 readingTime: 7
 tags: ["개발", "필터", "페이지네이션"]
+prefixTags:
+  - "kind:blog"
+  - "project:ol-home"
+  - "topic:development"
+  - "feature:filter"
+  - "feature:pagination"
 published: true
 ---
 

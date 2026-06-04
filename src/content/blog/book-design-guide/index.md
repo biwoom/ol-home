@@ -5,6 +5,12 @@ date: 2026-05-28
 category: OL
 readingTime: 6
 tags: ["BOOK", "DESIGN", "파일관리"]
+prefixTags:
+  - "kind:blog"
+  - "project:book"
+  - "project:design"
+  - "topic:file-management"
+  - "topic:metadata"
 published: true
 ---
 

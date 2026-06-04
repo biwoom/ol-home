@@ -9,6 +9,12 @@ htmlPath: "buddha-story"
 primaryEntities: []
 description: "붓다스토리 - 부처님의 일대기를 담은 책입니다."
 tags: ["인물 · 행적", "불전"]
+prefixTags:
+  - "kind:book"
+  - "topic:붓다전기"
+  - "topic:불전"
+  - "format:html"
+license: "CC0"
 published: true
 ---
 

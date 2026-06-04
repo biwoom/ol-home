@@ -5,6 +5,11 @@ date: 2026-05-25
 category: OL
 readingTime: 7
 tags: ["브랜드", "디자인"]
+prefixTags:
+  - "kind:blog"
+  - "project:ol-home"
+  - "topic:brand"
+  - "topic:design-system"
 published: true
 ---
 

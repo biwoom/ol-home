@@ -5,7 +5,7 @@ summary: "보리도차제론 수행체계 도식"
 primaryKind: infographic
 type: diagram
 format: mixed
-series: "불교 수행체계 인포그래픽"
+series: "람림"
 version: "0.1.0"
 status: published
 date: 2026-06-04
@@ -24,8 +24,10 @@ pageSize: "A4"
 orientation: portrait
 medium: "HTML/CSS, PDF"
 source: "OL Project"
-credits: ["비구 담진"]
+credits: ["비움"]
 license: "CC0"
+relatedWorks:
+  - "donam-kim-sung-chul/paper/systematic_buddhology/systematic_buddhology"
 
 prefixTags:
   - "kind:infographic"

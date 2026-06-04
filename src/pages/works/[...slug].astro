@@ -17,6 +17,9 @@ const statusLabel: Record<string, string> = {
   draft: '초고', revising: '수정중', ready: '완료', published: '출판됨',
 };
 const statusKey = entry.data.status ?? 'draft';
+const hasRightsInfo = Boolean(
+  entry.data.license || entry.data.rightsHolder || entry.data.copyrightNotice || entry.data.authors.length
+);
 ---
 
 <WorksLayout
@@ -50,6 +53,29 @@ const statusKey = entry.data.status ?? 'draft';
           <span class="ol-badge">{tag}</span>
         ))}
       </div>
+
+      {hasRightsInfo && (
+        <div class="ol-works-rights ol-kr">
+          {entry.data.authors.length > 0 && (
+            <span>저자: {entry.data.authors.join(', ')}</span>
+          )}
+          {entry.data.rightsHolder && (
+            <span>저작권자: {entry.data.rightsHolder}</span>
+          )}
+          {entry.data.license && (
+            <span>
+              라이선스: {entry.data.licenseUrl ? (
+                <a href={entry.data.licenseUrl} target="_blank" rel="noopener noreferrer">
+                  {entry.data.license}
+                </a>
+              ) : entry.data.license}
+            </span>
+          )}
+          {entry.data.copyrightNotice && (
+            <span>{entry.data.copyrightNotice}</span>
+          )}
+        </div>
+      )}
 
       {entry.data.excerpt && (
         <p style="color:var(--ol-muted);margin-top:16px;line-height:1.7;" class="ol-kr">

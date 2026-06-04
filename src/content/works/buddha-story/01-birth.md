@@ -1,10 +1,18 @@
 ---
 title: "1장 — 탄생: 도솔천에서 룸비니까지"
 series: "붓다 스토리"
-category: "인물 · 행적"
+category: "붓다전기"
 status: revising
 order: 1
 tags: ["불전", "탄생"]
+prefixTags:
+  - "kind:works"
+  - "type:narrative"
+  - "topic:붓다전기"
+  - "topic:탄생"
+  - "tradition:불교"
+authors: ["비움"]
+license: "CC0"
 published: true
 ---
 

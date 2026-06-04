@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content';
 import BookLayout from '../../layouts/BookLayout.astro';
 
 export async function getStaticPaths() {
-  const books = await getCollection('works', e => e.data.published);
+  const books = await getCollection('book', e => e.data.published);
   return books.map(entry => ({
     params: { slug: entry.id },
     props: { entry },

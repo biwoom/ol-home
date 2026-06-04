@@ -20,7 +20,7 @@ const previewPaths = entry.data.previewPaths.length > 0
   : [entry.data.imagePath ?? entry.data.thumbnailPath].filter(Boolean);
 const previewPath = previewPaths[0];
 const description = entry.data.description ?? entry.data.summary ?? entry.data.imageAlt ?? entry.data.title;
-const allTags = [...entry.data.prefixTags, ...entry.data.tags];
+const allTags = entry.data.tags;
 const showImageDownload = entry.data.format === 'image' && Boolean(entry.data.imagePath);
 
 function designAsset(path?: string) {
