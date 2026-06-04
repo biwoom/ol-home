@@ -32,16 +32,16 @@ const categories = [...new Set(allWorks.map(w => w.data.category).filter(Boolean
 const allTags = [...new Set(allWorks.flatMap(w => w.data.tags))].sort((a, b) => a.localeCompare(b, 'ko'));
 ---
 
-<WorksLayout title="OL WORKS — 제작 중인 원고들">
+<WorksLayout title="OL WORKS — 지혜를 담는 문서 라이브러리">
   <div>
     <div class="ol-works-index-header">
-      <span class="ol-kicker">WORKS · 생성 중인 지혜</span>
+      <span class="ol-kicker">WORKS · 지혜를 담는 문서</span>
       <h1 style="font-size: 32px; margin-top: 10px;" class="ol-kr">
-        작업 중인 원고들
+        지혜를 담는 문서 라이브러리
       </h1>
       <p style="color: var(--ol-muted); margin-top: 12px; max-width: 52ch; line-height: 1.7;" class="ol-kr">
-        완결 이전의 초고, 번역 초안, 주석 연구를 공개합니다.
-        완결된 원고는 OL BOOK으로 출판됩니다.
+        번역, 주석, 연구 노트를 공개하는 살아 있는 문서 라이브러리.
+        붓다의 가르침을 담은 글들이 이곳에서 열리고, 고쳐지고, 이어집니다.
       </p>
     </div>
 

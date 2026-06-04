@@ -2,7 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { url } from '../../lib/url';
-import { typeLabel } from '../../lib/design';
+import { formatLabel, primaryKindLabel, typeLabel } from '../../lib/design';
 
 export async function getStaticPaths() {
   const items = await getCollection('design', e => e.data.published);
@@ -14,62 +14,130 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+
+const previewPaths = entry.data.previewPaths.length > 0
+  ? entry.data.previewPaths
+  : [entry.data.imagePath ?? entry.data.thumbnailPath].filter(Boolean);
+const previewPath = previewPaths[0];
+const description = entry.data.description ?? entry.data.summary ?? entry.data.imageAlt ?? entry.data.title;
+const allTags = [...entry.data.prefixTags, ...entry.data.tags];
+const showImageDownload = entry.data.format === 'image' && Boolean(entry.data.imagePath);
+
+function designAsset(path?: string) {
+  return path ? url(`/design/${path}`) : '';
+}
 ---
 
 <BaseLayout
   title={`${entry.data.title} — OL DESIGN`}
-  description={entry.data.imageAlt ?? entry.data.title}
+  description={description}
 >
   <main>
     <div class="ol-design-detail-wrap">
       <div class="ol-container">
 
-        <!-- Back -->
         <nav class="ol-design-detail-nav">
           <a href={url('/design')} class="ol-design-back-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
-            DESIGN 아카이브
+            DESIGN 라이브러리
           </a>
         </nav>
 
-        <!-- 2-column detail layout -->
         <div class="ol-design-detail">
 
-          <!-- Left: image -->
           <div class="ol-design-detail-img-col">
-            {entry.data.imagePath ? (
-              <div class="ol-design-detail-img-frame">
-                <img
-                  src={url(`/design/${entry.data.imagePath}`)}
-                  alt={entry.data.imageAlt ?? entry.data.title}
-                  loading="eager"
-                  decoding="async"
-                />
+            {previewPath ? (
+              <div class="ol-design-preview-stack">
+                {previewPaths.map((path, index) => (
+                  <figure class="ol-design-detail-img-frame">
+                    <img
+                      src={designAsset(path)}
+                      alt={`${entry.data.imageAlt ?? entry.data.title}${previewPaths.length > 1 ? ` ${index + 1}` : ''}`}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                    />
+                    {previewPaths.length > 1 && (
+                      <figcaption>PREVIEW {index + 1}</figcaption>
+                    )}
+                  </figure>
+                ))}
               </div>
             ) : (
               <div class="ol-ph ol-design-detail-img-frame" style="aspect-ratio: 4/3;">
-                NO IMAGE
+                {primaryKindLabel[entry.data.primaryKind] ?? 'DESIGN'}
               </div>
             )}
           </div>
 
-          <!-- Right: metadata + content -->
           <div class="ol-design-detail-meta-col">
 
-            <!-- Header -->
             <header class="ol-design-detail-header">
-              {entry.data.type && (
-                <div class="ol-design-detail-type-badge">
-                  {typeLabel[entry.data.type] ?? entry.data.type}
-                </div>
-              )}
+              <div class="ol-design-detail-type-badge">
+                {primaryKindLabel[entry.data.primaryKind]}
+                {entry.data.type && ` · ${typeLabel[entry.data.type] ?? entry.data.type}`}
+              </div>
               <h1 class="ol-design-detail-title ol-kr">{entry.data.title}</h1>
+              {description && (
+                <p class="ol-design-detail-summary ol-kr">{description}</p>
+              )}
             </header>
 
-            <!-- Metadata table -->
+            {(entry.data.htmlPath || entry.data.pdfPath || showImageDownload) && (
+              <div class="ol-design-detail-actions">
+                {entry.data.htmlPath && (
+                  <a
+                    href={designAsset(entry.data.htmlPath)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="ol-btn ol-btn-primary"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                      <polyline points="15 3 21 3 21 9"/>
+                      <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                    웹브라우저로 보기
+                  </a>
+                )}
+                {entry.data.pdfPath && (
+                  <a
+                    href={designAsset(entry.data.pdfPath)}
+                    download
+                    class="ol-btn ol-btn-outline"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 3v13m0 0 4-4m-4 4-4-4M4 21h16"/>
+                    </svg>
+                    PDF 다운로드
+                  </a>
+                )}
+                {showImageDownload && entry.data.imagePath && (
+                  <a
+                    href={designAsset(entry.data.imagePath)}
+                    download={entry.data.imagePath}
+                    class="ol-btn ol-btn-outline"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 3v13m0 0 4-4m-4 4-4-4M4 21h16"/>
+                    </svg>
+                    이미지 다운로드
+                  </a>
+                )}
+              </div>
+            )}
+
             <dl class="ol-design-detail-dl">
+              <dt>형식</dt>
+              <dd>{formatLabel[entry.data.format] ?? entry.data.format}</dd>
+
+              <dt>버전</dt>
+              <dd><span class="ol-code">v{entry.data.version}</span></dd>
+
+              <dt>상태</dt>
+              <dd>{entry.data.status}</dd>
+
               {entry.data.series && (
                 <>
                   <dt>시리즈</dt>
@@ -112,6 +180,18 @@ const { Content } = await render(entry);
                   <dd>{entry.data.dimensions}</dd>
                 </>
               )}
+              {entry.data.pageSize && (
+                <>
+                  <dt>지면</dt>
+                  <dd>{entry.data.pageSize}</dd>
+                </>
+              )}
+              {entry.data.orientation && (
+                <>
+                  <dt>방향</dt>
+                  <dd>{entry.data.orientation}</dd>
+                </>
+              )}
               {entry.data.source && (
                 <>
                   <dt>출처</dt>
@@ -128,27 +208,9 @@ const { Content } = await render(entry);
               <dd><span class="ol-code">{entry.data.license}</span></dd>
             </dl>
 
-            <!-- Download -->
-            {entry.data.imagePath && (
-              <div class="ol-design-detail-download">
-                <a
-                  href={url(`/design/${entry.data.imagePath}`)}
-                  download={entry.data.imagePath}
-                  class="ol-btn ol-btn-outline"
-                  style="width: 100%; justify-content: center;"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 3v13m0 0 4-4m-4 4-4-4M4 21h16"/>
-                  </svg>
-                  이미지 다운로드
-                </a>
-              </div>
-            )}
-
-            <!-- Tags -->
-            {entry.data.tags.length > 0 && (
+            {allTags.length > 0 && (
               <div class="ol-design-detail-tags">
-                {entry.data.tags.map(tag => (
+                {allTags.map(tag => (
                   <a
                     href={url(`/design?tag=${encodeURIComponent(tag)}`)}
                     class="ol-design-tag-link"
@@ -161,7 +223,6 @@ const { Content } = await render(entry);
 
             <div class="ol-divider"></div>
 
-            <!-- Body -->
             <div class="ol-prose ol-kr" style="font-size: 14px; line-height: 1.75;">
               <Content />
             </div>

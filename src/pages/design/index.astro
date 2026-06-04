@@ -2,75 +2,95 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { url } from '../../lib/url';
-import { typeLabel, typeOrder } from '../../lib/design';
+import {
+  formatLabel,
+  primaryKindLabel,
+  primaryKindOrder,
+  typeLabel,
+} from '../../lib/design';
 
 const allItems = await getCollection('design', e => e.data.published);
-allItems.sort((a, b) => a.data.title.localeCompare(b.data.title, 'ko'));
+allItems.sort((a, b) => {
+  const kindA = primaryKindOrder.indexOf(a.data.primaryKind as typeof primaryKindOrder[number]);
+  const kindB = primaryKindOrder.indexOf(b.data.primaryKind as typeof primaryKindOrder[number]);
+  if (kindA !== kindB) return kindA - kindB;
+  return a.data.title.localeCompare(b.data.title, 'ko');
+});
 
 const PAGE_SIZE = 12;
 
-const typeCounts = allItems.reduce((acc, item) => {
-  const t = item.data.type ?? 'other';
-  acc[t] = (acc[t] ?? 0) + 1;
+const kindCounts = allItems.reduce((acc, item) => {
+  const kind = item.data.primaryKind;
+  acc[kind] = (acc[kind] ?? 0) + 1;
   return acc;
 }, {} as Record<string, number>);
 
-const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => a.localeCompare(b, 'ko'));
+const allTags = [...new Set(allItems.flatMap(i => [...i.data.prefixTags, ...i.data.tags]))]
+  .sort((a, b) => a.localeCompare(b, 'ko'));
+
+function assetUrl(path?: string) {
+  return path ? url(`/design/${path}`) : '';
+}
+
+function itemFormats(item: typeof allItems[number]) {
+  const formats = [];
+  if (item.data.htmlPath) formats.push('HTML');
+  if (item.data.pdfPath) formats.push('PDF');
+  if (item.data.imagePath && formats.length === 0) formats.push(formatLabel[item.data.format] ?? 'IMAGE');
+  return formats.length > 0 ? formats : [formatLabel[item.data.format] ?? 'IMAGE'];
+}
 ---
 
 <BaseLayout
-  title="OL DESIGN — 불교 콘텐츠 스타일 레퍼런스"
-  description="불교 콘텐츠를 위한 스타일 레퍼런스 — 인물·복장·건물·지역환경·원문 데이터."
+  title="OL DESIGN — 불교 인포그래픽 라이브러리"
+  description="불교 지식을 HTML과 PDF로 시각화하는 인포그래픽 중심의 OL DESIGN 라이브러리입니다."
 >
   <main>
-    <!-- Hero -->
     <section class="ol-hero" style="padding-bottom: 32px;">
       <div class="ol-container">
-        <span class="ol-kicker">ARCHIVE · 스타일 레퍼런스</span>
+        <span class="ol-kicker">VISUAL LIBRARY · 불교인포그래픽</span>
         <h1 class="ol-kr">
-          불교 콘텐츠 제작을 위한<br>
-          <em>스타일 레퍼런스</em> 아카이브.
+          불교 지식의<br>
+          <em>이해를 돕는</em> 시각 콘텐츠.
         </h1>
         <p class="ol-lead ol-kr">
-          승복 한 벌의 색, 한 절의 처마 비례, 고대 인도 도시의 평면 — 불교 콘텐츠를 만들 때 매번 처음부터 조사해야 했던 자료들을 모읍니다.
+          OL DESIGN은 인포그래픽을 중심으로 불교 개념·서사·구조를 시각화합니다.
+          불교관련 인포그래픽, 삽화, 스타일시트 자료를 축적하고 공유합니다.
         </p>
       </div>
     </section>
 
-    <!-- Layout: sidebar + grid -->
     <section class="ol-section-tight">
       <div class="ol-container">
         <div class="ol-design-layout">
 
-          <!-- ── Sidebar ── -->
           <aside class="ol-design-sidebar">
             <div class="ol-design-sidebar-inner">
 
-              <!-- Category -->
               <div class="ol-design-filter-group">
-                <div class="ol-design-filter-label">CATEGORY</div>
+                <div class="ol-design-filter-label">KIND</div>
                 <ul class="ol-design-cat-list">
                   <li>
                     <button
                       class="ol-design-cat-btn active"
-                      data-filter-type="all"
+                      data-filter-kind="all"
                       data-count={allItems.length}
                     >
                       <span class="cat-name ol-kr">전체</span>
                       <span class="cat-count">{allItems.length}</span>
                     </button>
                   </li>
-                  {typeOrder.map(type => {
-                    const count = typeCounts[type] ?? 0;
+                  {primaryKindOrder.map(kind => {
+                    const count = kindCounts[kind] ?? 0;
                     return (
                       <li>
                         <button
                           class="ol-design-cat-btn"
-                          data-filter-type={type}
+                          data-filter-kind={kind}
                           data-count={count}
                           disabled={count === 0}
                         >
-                          <span class="cat-name ol-kr">{typeLabel[type]}</span>
+                          <span class="cat-name ol-kr">{primaryKindLabel[kind]}</span>
                           <span class="cat-count">{count}</span>
                         </button>
                       </li>
@@ -79,10 +99,9 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
                 </ul>
               </div>
 
-              <!-- Tags -->
               {allTags.length > 0 && (
                 <div class="ol-design-filter-group">
-                  <div class="ol-design-filter-label">TAGS</div>
+                  <div class="ol-design-filter-label">PREFIX TAGS</div>
                   <div class="ol-design-tag-cloud">
                     {allTags.map(tag => (
                       <button class="ol-design-tag-btn" data-filter-tag={tag}>
@@ -93,19 +112,18 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
                 </div>
               )}
 
-              <!-- CC0 note -->
               <div class="ol-design-sidebar-note">
-                <span class="ol-mono-label" style="font-size: 20px; letter-spacing: -0.02em;">CC0</span>
-                <p class="ol-kr">출처 표기 없이 자유롭게 사용할 수 있습니다.</p>
+                <span class="ol-mono-label" style="font-size: 18px;">HTML · PDF</span>
+                <p class="ol-kr">
+                  인포그래픽은 브라우저 열람용 HTML과 배포·인쇄용 PDF를 우선 산출물로 관리합니다.
+                  라이선스는 자료별 메타데이터를 따릅니다.
+                </p>
               </div>
 
             </div>
           </aside>
 
-          <!-- ── Main ── -->
           <div class="ol-design-main">
-
-            <!-- Toolbar -->
             <div class="ol-design-toolbar">
               <div class="ol-design-toolbar-count">
                 <span id="design-visible-count">{allItems.length}</span>개 자료
@@ -113,58 +131,67 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
               <div class="ol-design-active-filters" id="design-active-filters"></div>
             </div>
 
-            <!-- Empty state -->
             {allItems.length === 0 && (
               <div style="padding: 80px 0; text-align: center; color: var(--ol-muted); font-family: var(--ol-font-mono); font-size: 13px;">
                 아직 등록된 자료가 없습니다.
               </div>
             )}
 
-            <!-- Grid -->
             <div class="ol-design-grid" id="design-grid">
-              {allItems.map((item, i) => (
-                <a
-                  class="ol-design-card"
-                  href={url(`/design/${item.id}`)}
-                  data-type={item.data.type ?? 'other'}
-                  data-tags={item.data.tags.join(',')}
-                  data-index={i}
-                  style={i >= PAGE_SIZE ? 'display:none;' : ''}
-                >
-                  <div class="ol-design-card-img">
-                    {item.data.imagePath ? (
-                      <img
-                        src={url(`/design/${item.data.imagePath}`)}
-                        alt={item.data.imageAlt ?? item.data.title}
-                        loading={i < 6 ? 'eager' : 'lazy'}
-                        decoding="async"
-                      />
-                    ) : (
-                      <div class="ol-ph" style="width:100%;height:100%;">
-                        {(item.data.type ?? 'DESIGN').toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div class="ol-design-card-meta">
-                    <div class="ol-design-card-type">
-                      {item.data.type ? typeLabel[item.data.type] : 'DESIGN'}
-                      {item.data.series && <span class="ol-design-card-series"> · {item.data.series}</span>}
+              {allItems.map((item, i) => {
+                const previewPath = item.data.thumbnailPath ?? item.data.imagePath;
+                const tags = [...item.data.prefixTags, ...item.data.tags];
+                const formats = itemFormats(item);
+                return (
+                  <a
+                    class="ol-design-card"
+                    href={url(`/design/${item.id}`)}
+                    data-kind={item.data.primaryKind}
+                    data-tags={tags.join(',')}
+                    data-index={i}
+                    style={i >= PAGE_SIZE ? 'display:none;' : ''}
+                  >
+                    <div class="ol-design-card-img">
+                      {previewPath ? (
+                        <img
+                          src={assetUrl(previewPath)}
+                          alt={item.data.imageAlt ?? item.data.title}
+                          loading={i < 6 ? 'eager' : 'lazy'}
+                          decoding="async"
+                        />
+                      ) : (
+                        <div class="ol-ph" style="width:100%;height:100%;">
+                          {primaryKindLabel[item.data.primaryKind] ?? 'DESIGN'}
+                        </div>
+                      )}
                     </div>
-                    <h3 class="ol-design-card-title ol-kr">{item.data.title}</h3>
-                    {item.data.era && (
-                      <div class="ol-design-card-era">{item.data.era}</div>
-                    )}
-                  </div>
-                </a>
-              ))}
+                    <div class="ol-design-card-meta">
+                      <div class="ol-design-card-type">
+                        {primaryKindLabel[item.data.primaryKind]}
+                        {item.data.type && <span> · {typeLabel[item.data.type] ?? item.data.type}</span>}
+                      </div>
+                      <h3 class="ol-design-card-title ol-kr">{item.data.title}</h3>
+                      {(item.data.summary ?? item.data.description) && (
+                        <p class="ol-design-card-summary ol-kr">
+                          {item.data.summary ?? item.data.description}
+                        </p>
+                      )}
+                      <div class="ol-design-format-row">
+                        {formats.map(format => (
+                          <span class="ol-design-format-badge">{format}</span>
+                        ))}
+                        {item.data.version && <span class="ol-design-card-era">v{item.data.version}</span>}
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
 
-            <!-- No results (filtered) -->
             <div id="design-no-results" style="display:none; padding: 60px 0; text-align: center; color: var(--ol-muted); font-size: 14px;" class="ol-kr">
               선택한 필터에 해당하는 자료가 없습니다.
             </div>
 
-            <!-- Load more -->
             {allItems.length > PAGE_SIZE && (
               <div class="ol-design-loadmore" id="design-loadmore-wrap">
                 <button id="design-loadmore-btn" class="ol-btn ol-btn-outline">
@@ -175,23 +202,20 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
                 </button>
               </div>
             )}
-
           </div>
         </div>
       </div>
     </section>
   </main>
-  <script type="application/json" id="design-type-labels" set:html={JSON.stringify(typeLabel)} />
+  <script type="application/json" id="design-kind-labels" set:html={JSON.stringify(primaryKindLabel)} />
 </BaseLayout>
 
 <script>
-  // ─── state ───────────────────────────────────────────────
   const PAGE_SIZE = 12;
-  let activeType = 'all';
+  let activeKind = 'all';
   let activeTag: string | null = null;
   let visibleCount = PAGE_SIZE;
 
-  // ─── elements ────────────────────────────────────────────
   const grid = document.getElementById('design-grid')!;
   const cards = Array.from(grid.querySelectorAll<HTMLElement>('.ol-design-card'));
   const countEl = document.getElementById('design-visible-count')!;
@@ -200,12 +224,12 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
   const loadmoreWrap = document.getElementById('design-loadmore-wrap');
   const loadmoreBtn = document.getElementById('design-loadmore-btn');
   const loadmoreRemaining = document.getElementById('design-loadmore-remaining');
+  const kindLabels: Record<string, string> = JSON.parse(document.getElementById('design-kind-labels')!.textContent!);
 
-  // ─── filter logic ─────────────────────────────────────────
   function matchCard(card: HTMLElement): boolean {
-    const type = card.dataset.type ?? 'other';
+    const kind = card.dataset.kind ?? 'infographic';
     const tags = (card.dataset.tags ?? '').split(',').filter(Boolean);
-    if (activeType !== 'all' && type !== activeType) return false;
+    if (activeKind !== 'all' && kind !== activeKind) return false;
     if (activeTag && !tags.includes(activeTag)) return false;
     return true;
   }
@@ -214,7 +238,6 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
     const matched = cards.filter(matchCard);
     const unmatched = cards.filter(c => !matchCard(c));
 
-    // Reset visibleCount per filter change
     visibleCount = PAGE_SIZE;
 
     matched.forEach((c, i) => {
@@ -225,7 +248,6 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
     countEl.textContent = String(matched.length);
     noResults.style.display = matched.length === 0 ? '' : 'none';
 
-    // Load more button
     if (loadmoreWrap && loadmoreRemaining) {
       const remaining = matched.length - visibleCount;
       if (remaining > 0) {
@@ -236,46 +258,40 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
       }
     }
 
-    // Active filter pills
     updateFilterPills();
   }
 
   function updateFilterPills() {
     activeFiltersEl.innerHTML = '';
-    if (activeType !== 'all') {
-      const pill = makePill(typeLabels[activeType] ?? activeType, () => {
-        activeType = 'all';
+    if (activeKind !== 'all') {
+      activeFiltersEl.appendChild(makePill(kindLabels[activeKind] ?? activeKind, () => {
+        activeKind = 'all';
         document.querySelectorAll<HTMLElement>('.ol-design-cat-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.filterType === 'all');
+          b.classList.toggle('active', b.dataset.filterKind === 'all');
         });
         applyFilters();
-      });
-      activeFiltersEl.appendChild(pill);
+      }));
     }
     if (activeTag) {
-      const pill = makePill(`#${activeTag}`, () => {
+      activeFiltersEl.appendChild(makePill(`#${activeTag}`, () => {
         activeTag = null;
         document.querySelectorAll<HTMLElement>('.ol-design-tag-btn').forEach(b => b.classList.remove('active'));
         applyFilters();
-      });
-      activeFiltersEl.appendChild(pill);
+      }));
     }
   }
 
   function makePill(label: string, onClose: () => void) {
     const span = document.createElement('span');
     span.className = 'ol-design-filter-pill';
-    span.innerHTML = `${label} <button aria-label="필터 해제">×</button>`;
+    span.innerHTML = `${label} <button aria-label="필터 해제">x</button>`;
     span.querySelector('button')!.addEventListener('click', onClose);
     return span;
   }
 
-  const typeLabels: Record<string, string> = JSON.parse(document.getElementById('design-type-labels')!.textContent!);
-
-  // ─── category buttons ─────────────────────────────────────
   document.querySelectorAll<HTMLButtonElement>('.ol-design-cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      activeType = btn.dataset.filterType ?? 'all';
+      activeKind = btn.dataset.filterKind ?? 'all';
       document.querySelectorAll<HTMLElement>('.ol-design-cat-btn').forEach(b => {
         b.classList.toggle('active', b === btn);
       });
@@ -283,7 +299,6 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
     });
   });
 
-  // ─── tag buttons ──────────────────────────────────────────
   document.querySelectorAll<HTMLButtonElement>('.ol-design-tag-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const tag = btn.dataset.filterTag ?? '';
@@ -299,7 +314,6 @@ const allTags = [...new Set(allItems.flatMap(i => i.data.tags))].sort((a, b) => 
     });
   });
 
-  // ─── load more ────────────────────────────────────────────
   loadmoreBtn?.addEventListener('click', () => {
     const matched = cards.filter(matchCard);
     visibleCount += PAGE_SIZE;

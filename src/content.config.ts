@@ -118,7 +118,7 @@ const blogCollection = defineCollection({
   }),
 });
 
-// works — 제작 중인 원고 (챕터별 단편 문서)
+// works — 번역, 주석, 연구 노트를 담는 살아 있는 문서
 const worksCollection = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/works' }),
   schema: z.object({
@@ -168,26 +168,46 @@ const designCollection = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/design' }),
   schema: z.object({
     title: z.string(),
+    description: z.string().optional(),
+    summary: z.string().optional(),
+    primaryKind: z.enum([
+      'infographic', 'illustration', 'style-sheet', 'reference',
+    ]).default('infographic'),
     category: z.string().optional(),
     type: z.enum([
-      'illustration', 'infographic', 'poster', 'turnaround',
+      'infographic', 'timeline', 'diagram', 'map', 'comparison',
+      'flowchart', 'concept-map', 'poster',
+      'illustration', 'style-sheet', 'turnaround',
       'portrait', 'costume', 'architecture',
       'landscape', 'manuscript', 'artifact', 'other',
     ]).optional(),
     series: z.string().optional(),
     medium: z.string().optional(),
+    format: z.enum(['html', 'pdf', 'image', 'mixed']).default('image'),
     scriptureRef: z.string().optional(),
     dimensions: z.string().optional(),
+    pageSize: z.string().optional(),
+    orientation: z.enum(['portrait', 'landscape', 'square']).optional(),
+    version: z.string().default('0.1.0'),
+    status: z.enum(['draft', 'review', 'published', 'archived']).default('published'),
+    date: z.coerce.date().optional(),
     era: z.string().optional(),
     region: z.string().optional(),
     tradition: z.string().optional(),
     entities: z.array(z.string()).default([]),
+    relatedWorks: z.array(z.string()).default([]),
+    thumbnailPath: z.string().optional(),
     imagePath: z.string().optional(),
+    previewPaths: z.array(z.string()).default([]),
     imageAlt: z.string().optional(),
+    htmlPath: z.string().optional(),
+    pdfPath: z.string().optional(),
     source: z.string().optional(),
     sourceUrl: z.string().optional(),
+    credits: z.array(z.string()).default([]),
     license: z.string().default('CC0'),
     tags: z.array(z.string()).default([]),
+    prefixTags: z.array(z.string()).default([]),
     published: z.boolean().default(false),
   }),
 });
