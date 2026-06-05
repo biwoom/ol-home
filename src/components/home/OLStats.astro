@@ -1,13 +1,12 @@
 ---
 import { getCollection } from 'astro:content';
-import fs from 'node:fs';
+import { getLatestAtlasBuild } from '../../lib/atlas';
 
 const books = await getCollection('book', ({ data }) => data.published);
 const designs = await getCollection('design', ({ data }) => data.published);
 const blogs = await getCollection('blog', ({ data }) => data.published);
 
-const atlasFiles = fs.readdirSync('public/atlas/latest').filter(f => f.endsWith('.html'));
-const atlasVersion = atlasFiles[0]?.match(/v(\d+\.\d+\.\d+)/)?.[1] ?? '0.0.0';
+const atlasVersion = getLatestAtlasBuild().version;
 ---
 <section class="ol-section-tight">
   <div class="ol-container">

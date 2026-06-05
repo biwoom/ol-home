@@ -1,22 +1,14 @@
 ---
-import fs from 'node:fs';
-import path from 'node:path';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLatestAtlasBuild } from '../lib/atlas';
 import { url } from '../lib/url';
 
-const latestDir = path.join(process.cwd(), 'public/atlas/latest');
-const files = fs.readdirSync(latestDir);
-const match = files
-  .map(f => f.match(/^ol-atlas_v(.+)\.html$/))
-  .find(Boolean);
-
-const version = match?.[1] ?? '0.0.0';
-const fileName = match?.[0] ?? 'ol-atlas.html';
-const latestPath = `/atlas/latest/${fileName}`;
-const fileBytes = fs.statSync(path.join(latestDir, fileName)).size;
-const fileSize = fileBytes < 1024 * 1024
-  ? `${(fileBytes / 1024).toFixed(0)} KB`
-  : `${(fileBytes / (1024 * 1024)).toFixed(1)} MB`;
+const {
+  fileName,
+  filePath: latestPath,
+  version,
+  fileSize,
+} = getLatestAtlasBuild();
 ---
 
 <BaseLayout
