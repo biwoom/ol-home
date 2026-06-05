@@ -1,6 +1,11 @@
 ---
 title: "몸과 마음의 정화를 위한 여섯 단계 불교명상 기초수행"
 series: "수행연구"
+seriesOrder: 20
+part: "기초수행"
+partOrder: 10
+group: "몸과 마음의 정화"
+groupOrder: 10
 category: "수행"
 chapter: 1
 order: 1

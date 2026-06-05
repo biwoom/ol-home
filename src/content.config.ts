@@ -129,6 +129,11 @@ const worksCollection = defineCollection({
   schema: z.object({
     title: z.string(),
     series: z.string().optional(),
+    seriesOrder: z.number().default(0),
+    part: z.string().optional(),
+    partOrder: z.number().default(0),
+    group: z.string().optional(),
+    groupOrder: z.number().default(0),
     category: z.string().optional(),
     chapter: z.number().optional(),
     order: z.number().default(0),

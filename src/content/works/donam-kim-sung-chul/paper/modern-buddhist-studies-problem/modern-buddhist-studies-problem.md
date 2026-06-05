@@ -1,6 +1,11 @@
 ---
 title: "현대 불교학의 과제와 해결방향"
 series: "도남(圖南) 김성철"
+seriesOrder: 30
+part: "체계불학"
+partOrder: 10
+group: "현대 불교학"
+groupOrder: 10
 category: "논문"
 chapter: 1
 order: 1
@@ -16,8 +21,9 @@ prefixTags:
   - "author:도남-김성철"
 authors: ["도남(圖南) 김성철"]
 rightsHolder: "도남(圖南) 김성철"
-license: "별도 허락"
-copyrightNotice: "© 도남(圖南) 김성철. 인용과 재배포는 별도 허락과 출처 표기를 따릅니다."
+license: "CC BY 4.0"
+licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+copyrightNotice: "© 도남(圖南) 김성철. 인용과 재배포는 CC BY 4.0 라이선스와 출처 표기를 따릅니다."
 published: true
 excerpt: "현대 불교학의 문제점과 그 해결방향으로서 체계불학의 필요성을 제기하고, 티베트의 《보리도차제론》을 체계불학의 한 예로 제시한 글."
 ---

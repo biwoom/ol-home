@@ -2,24 +2,10 @@
 import { getCollection } from 'astro:content';
 import WorksLayout from '../../layouts/WorksLayout.astro';
 import { url } from '../../lib/url';
+import { buildWorksHierarchy } from '../../lib/works';
 
 const allWorks = await getCollection('works', e => e.data.published !== false);
-
-const groups = allWorks.reduce((acc, entry) => {
-  const series = entry.data.series ?? '_standalone';
-  if (!acc[series]) acc[series] = [];
-  acc[series].push(entry);
-  return acc;
-}, {} as Record<string, typeof allWorks>);
-
-for (const key of Object.keys(groups)) {
-  groups[key].sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
-}
-
-function formatSeries(key: string): string {
-  if (key === '_standalone') return '독립 문서';
-  return key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
+const hierarchy = buildWorksHierarchy(allWorks);
 
 const statusLabel: Record<string, string> = {
   draft:     '초고',
@@ -96,13 +82,14 @@ const allTags = [...new Set(allWorks.flatMap(w => w.data.tags))].sort((a, b) => 
     </div>
 
     <div id="works-sections">
-      {Object.entries(groups).map(([series, entries]) => {
-        const seriesCategories = [...new Set(entries.map(e => e.data.category).filter(Boolean))];
+      {hierarchy.map(series => {
+        const seriesEntries = series.parts.flatMap(part => part.groups.flatMap(group => group.entries));
+        const seriesCategories = [...new Set(seriesEntries.map(e => e.data.category).filter(Boolean))];
         return (
           <section class="ol-works-series" data-categories={seriesCategories.join(',')} style="margin-bottom: 48px;">
             <button class="ol-works-series-toggle" aria-expanded="true">
               <h2 class="ol-kicker" style="margin: 0;">
-                {formatSeries(series)} · <span class="ol-works-series-count">{entries.length}</span>편
+                {series.label} · <span class="ol-works-series-count">{series.count}</span>편
               </h2>
               <svg class="ol-works-series-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9"/>
@@ -110,44 +97,58 @@ const allTags = [...new Set(allWorks.flatMap(w => w.data.tags))].sort((a, b) => 
             </button>
 
             <div class="ol-works-series-body">
-              <div style="display: flex; flex-direction: column; border: 1px solid var(--ol-border); border-radius: var(--ol-r-lg); overflow: hidden;">
-                {entries.map((entry, i) => (
-                  <a
-                    href={url(`/works/${entry.id}`)}
-                    class="ol-works-entry"
-                    data-category={entry.data.category ?? ''}
-                    data-tags={entry.data.tags.join(',')}
-                    style={[
-                      'display:flex;align-items:center;justify-content:space-between;',
-                      'padding:16px 20px;background:var(--ol-surface);text-decoration:none;',
-                      'color:inherit;transition:background 100ms ease;',
-                      i > 0 ? 'border-top:1px solid var(--ol-border);' : '',
-                    ].join('')}
-                    onmouseover="this.style.background='var(--ol-surface-2)'"
-                    onmouseout="this.style.background='var(--ol-surface)'"
-                  >
-                    <div style="display:flex;align-items:center;gap:14px;">
-                      <span class="ol-mono-label" style="min-width:24px;text-align:right;">
-                        {String(entry.data.chapter ?? (i + 1)).padStart(2, '0')}
-                      </span>
-                      <div>
-                        <div style="font-size:15px;font-weight:600;color:var(--ol-ink);" class="ol-kr">
-                          {entry.data.title}
-                        </div>
-                        {entry.data.excerpt && (
-                          <div style="font-size:13px;color:var(--ol-muted);margin-top:3px;line-height:1.5;" class="ol-kr">
-                            {entry.data.excerpt}
+              <div class="ol-works-series-parts">
+                {series.parts.map(part => (
+                  <div class="ol-works-entry-part">
+                    <div class="ol-works-entry-part-header">
+                      <h3 class="ol-works-entry-part-title ol-kr">{part.label}</h3>
+                      <span class="ol-works-entry-part-count">{part.count}편</span>
+                    </div>
+
+                    <div class="ol-works-entry-part-body">
+                      {part.groups.map(group => (
+                        <div class="ol-works-entry-group">
+                          <div class="ol-works-entry-group-header">
+                            <h4 class="ol-works-entry-group-title ol-kr">{group.label}</h4>
+                            <span class="ol-works-entry-group-count">{group.entries.length}편</span>
                           </div>
-                        )}
-                      </div>
+
+                          <div class="ol-works-entry-list">
+                            {group.entries.map((entry, i) => (
+                              <a
+                                href={url(`/works/${entry.id}`)}
+                                class="ol-works-entry"
+                                data-category={entry.data.category ?? ''}
+                                data-tags={entry.data.tags.join(',')}
+                              >
+                                <div style="display:flex;align-items:center;gap:14px;min-width:0;">
+                                  <span class="ol-mono-label" style="min-width:24px;text-align:right;">
+                                    {String(entry.data.chapter ?? (i + 1)).padStart(2, '0')}
+                                  </span>
+                                  <div style="min-width:0;">
+                                    <div style="font-size:15px;font-weight:600;color:var(--ol-ink);" class="ol-kr">
+                                      {entry.data.title}
+                                    </div>
+                                    {entry.data.excerpt && (
+                                      <div style="font-size:13px;color:var(--ol-muted);margin-top:3px;line-height:1.5;" class="ol-kr">
+                                        {entry.data.excerpt}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                                  <span class={`ol-works-status ol-works-status--${entry.data.status ?? 'draft'}`}>
+                                    {statusLabel[entry.data.status ?? 'draft']}
+                                  </span>
+                                  <span style="color:var(--ol-subtle, #a3a3a3);">→</span>
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-                      <span class={`ol-works-status ol-works-status--${entry.data.status ?? 'draft'}`}>
-                        {statusLabel[entry.data.status ?? 'draft']}
-                      </span>
-                      <span style="color:var(--ol-subtle, #a3a3a3);">→</span>
-                    </div>
-                  </a>
+                  </div>
                 ))}
               </div>
             </div>
@@ -200,7 +201,22 @@ const allTags = [...new Set(allWorks.flatMap(w => w.data.tags))].sort((a, b) => 
       }
 
       section.style.display = '';
-      sectionEntries.forEach(e => { e.style.display = matchEntry(e) ? 'flex' : 'none'; });
+      section.querySelectorAll<HTMLElement>('.ol-works-entry-part').forEach(part => {
+        const partEntries = Array.from(part.querySelectorAll<HTMLElement>('.ol-works-entry'));
+        const partMatched = partEntries.filter(matchEntry);
+        part.style.display = partMatched.length === 0 ? 'none' : '';
+        const partCountEl = part.querySelector('.ol-works-entry-part-count');
+        if (partCountEl) partCountEl.textContent = `${partMatched.length}편`;
+
+        part.querySelectorAll<HTMLElement>('.ol-works-entry-group').forEach(group => {
+          const groupEntries = Array.from(group.querySelectorAll<HTMLElement>('.ol-works-entry'));
+          const groupMatched = groupEntries.filter(matchEntry);
+          group.style.display = groupMatched.length === 0 ? 'none' : '';
+          groupEntries.forEach(e => { e.style.display = matchEntry(e) ? 'flex' : 'none'; });
+          const groupCountEl = group.querySelector('.ol-works-entry-group-count');
+          if (groupCountEl) groupCountEl.textContent = `${groupMatched.length}편`;
+        });
+      });
       const countEl = section.querySelector('.ol-works-series-count');
       if (countEl) countEl.textContent = String(matched.length);
     });

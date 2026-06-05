@@ -31,7 +31,7 @@ const hasRightsInfo = Boolean(
     <header class="ol-works-article-header">
       {entry.data.series && (
         <span class="ol-kicker">
-          {entry.data.series.replace(/-/g, ' ').toUpperCase()}
+          {[entry.data.series, entry.data.part, entry.data.group].filter(Boolean).join(' / ').toUpperCase()}
         </span>
       )}
       <h1 style="font-size: 30px; margin-top: 10px; line-height: 1.3;" class="ol-kr">

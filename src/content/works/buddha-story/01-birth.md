@@ -1,6 +1,11 @@
 ---
 title: "1장 — 탄생: 도솔천에서 룸비니까지"
 series: "붓다 스토리"
+seriesOrder: 10
+part: "탄생과 출가"
+partOrder: 10
+group: "탄생"
+groupOrder: 10
 category: "붓다전기"
 status: revising
 order: 1
