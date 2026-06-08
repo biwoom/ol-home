@@ -19,16 +19,6 @@ const atlasVersion = getLatestAtlasBuild().version;
     </div>
 
     <div class="ol-grid-3">
-      <!-- 01 ATLAS -->
-      <a href={url('/atlas')} class="ol-product-card">
-        <span class="ol-mono-label">01 / TOOL</span>
-        <h3>OL ATLAS</h3>
-        <p class="ol-kr">단일 HTML 파일로 만들어진 불교 콘텐츠 제작·열람 도구. 설치 없이 브라우저 하나면 충분합니다.</p>
-        <div class="ol-product-foot">
-          <span class="ol-code">v{atlasVersion}</span>
-          <span class="ol-arrow">→</span>
-        </div>
-      </a>
 
       <!-- 06 WORKS -->
       <a href={url('/works')} class="ol-product-card">
@@ -45,7 +35,7 @@ const atlasVersion = getLatestAtlasBuild().version;
       <a href={url('/book')} class="ol-product-card">
         <span class="ol-mono-label">02 / LIBRARY</span>
         <h3>OL BOOK</h3>
-        <p class="ol-kr">한 권의 책과 같은 불교 콘텐츠 모음. 불교이야기, 명상동화, 불교문헌. <em>현재는 준비중</em> </p>
+        <p class="ol-kr">한 권의 책과 같은 불교 콘텐츠 모음. 불교이야기, 명상동화, 불교전문서적. <em>"현재는 준비중"</em> </p>
         <div class="ol-product-foot">
           <span class="ol-code">{books.length} 권 / 진행 중</span>
           <span class="ol-arrow">→</span>
@@ -85,6 +75,17 @@ const atlasVersion = getLatestAtlasBuild().version;
         </div>
       </a>
       
+      <!-- 01 ATLAS -->
+      <a href={url('/atlas')} class="ol-product-card">
+        <span class="ol-mono-label">01 / TOOL</span>
+        <h3>OL ATLAS</h3>
+        <p class="ol-kr">단일 HTML 파일로 만들어진 불교 콘텐츠 제작·열람 도구. 설치 없이 브라우저 하나면 충분합니다.</p>
+        <div class="ol-product-foot">
+          <span class="ol-code">v{atlasVersion}</span>
+          <span class="ol-arrow">→</span>
+        </div>
+      </a>
+
       <!-- + OPEN -->
       <div class="ol-product-card dashed">
         <span class="ol-mono-label">+ / OPEN</span>
