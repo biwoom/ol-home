@@ -1,0 +1,100 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import OLPrefixTagFilters from '../../components/common/OLPrefixTagFilters.astro';
+import { url } from '../../lib/url';
+import { buildTextHierarchy, formatTextTag } from '../../lib/text';
+import { groupTagsByPrefix } from '../../lib/tags';
+
+const allText = await getCollection('text', e => e.data.published !== false);
+const seriesList = buildTextHierarchy(allText);
+const seriesCards = seriesList.map(series => {
+  const firstEntry = series.entries[0];
+  const summary = series.meta?.data.description ?? series.meta?.data.excerpt ?? firstEntry?.data.excerpt;
+  const tags = series.meta?.data.tags?.length
+    ? series.meta.data.tags
+    : [...new Set(series.entries.flatMap(entry => entry.data.tags))];
+  return { series, firstEntry, summary, tags };
+});
+const tagGroups = groupTagsByPrefix(seriesCards.flatMap(item => item.tags));
+---
+
+<BaseLayout
+  title="OL TEXT — 불교 문헌 콘텐츠"
+  description="경전·논서·선어록·강의록을 번역하고 주석한 문헌 콘텐츠"
+>
+  <main>
+    <section class="ol-hero">
+      <div class="ol-container">
+        <span class="ol-kicker">TEXT · 문헌 콘텐츠</span>
+        <h1 class="ol-kr">
+          <em>날카롭고 통쾌한</em><br>
+          불교문헌들.
+        </h1>
+        <p class="ol-lead ol-kr">
+          OL TEXT는 경전·논서·선어록·강의록 등 불교문헌 중심의 불교콘텐츠입니다. 시리즈 단위로 읽고, 태그로 필요한 주제를 찾아볼 수 있습니다.
+        </p>
+      </div>
+    </section>
+
+    <hr style="margin:80px 0 40px; width: 80%; margin:0 auto;" />
+
+    <section class="ol-section">
+      <div class="ol-container">
+        <div class="ol-text-index">
+          <div style="margin-bottom: 48px;">
+            <span class="ol-kicker">TEXT · 불교 문헌</span>
+            <h1 style="font-size: 32px; margin-top: 10px; margin-bottom: 20px;" class="ol-kr">
+              OL TEXT 시리즈
+            </h1>
+
+            <OLPrefixTagFilters
+              id="text-prefix-filter"
+              groups={tagGroups}
+              targetSelector=".ol-text-series-card"
+              totalCount={seriesCards.length}
+              emptySelector="#text-no-results"
+            />
+          </div>
+
+          <section class="ol-text-series-grid" aria-label="TEXT 시리즈">
+            {seriesCards.map(({ series, summary, tags }) => {
+              return (
+                <a class="ol-text-series-card" href={url(`/text/${series.slug}`)} data-tags={JSON.stringify(tags)}>
+                  <div>
+                    <span class="ol-mono-label">{String(series.count).padStart(2, '0')} docs</span>
+                    <h2 class="ol-kr">{series.label}</h2>
+                    {summary && (
+                      <p class="ol-kr">{summary}</p>
+                    )}
+                  </div>
+                  {tags.length > 0 && (
+                    <div class="ol-text-series-card-tags" aria-label={`${series.label} 태그`}>
+                      {tags.slice(0, 6).map(tag => {
+                        const parsed = formatTextTag(tag);
+                        return (
+                          <span class="ol-text-tag">
+                            <span>{parsed.prefix}</span>
+                            <strong>{parsed.label}</strong>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </a>
+              );
+            })}
+          </section>
+
+          <p id="text-no-results" class="ol-kr ol-text-empty" style="display:none;">
+            선택한 태그에 해당하는 TEXT 시리즈가 없습니다.
+          </p>
+
+          {seriesList.length === 0 && (
+            <p class="ol-kr ol-text-empty">아직 공개된 원고가 없습니다.</p>
+          )}
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

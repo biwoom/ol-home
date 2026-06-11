@@ -1,4 +1,5 @@
 import { getCollection } from 'astro:content';
+import { isTextDocumentEntry } from './text';
 
 export type Triple = {
   subject: string;
@@ -9,8 +10,8 @@ export type Triple = {
 };
 
 export async function buildKnowledgeGraph() {
-  const [works, entities, designs, blogs] = await Promise.all([
-    getCollection('works'),
+  const [text, entities, designs, blogs] = await Promise.all([
+    getCollection('text', isTextDocumentEntry),
     getCollection('entities'),
     getCollection('design'),
     getCollection('blog'),
@@ -26,7 +27,7 @@ export async function buildKnowledgeGraph() {
     }
   }
 
-  for (const work of works) {
+  for (const work of text) {
     for (const rel of work.data.relations ?? []) {
       triples.push({ ...rel, source: work.id });
     }

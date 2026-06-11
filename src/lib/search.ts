@@ -1,22 +1,34 @@
 import { getCollection } from 'astro:content';
+import { getTextEntryUrl, isTextDocumentEntry } from './text';
+import { getStoryEntryUrl } from './story';
 
 export async function buildSearchIndex() {
-  const [works, entities, designs, blogs] = await Promise.all([
-    getCollection('works', e => e.data.published),
+  const [text, stories, entities, designs, blogs] = await Promise.all([
+    getCollection('text', e => e.data.published && isTextDocumentEntry(e)),
+    getCollection('story', e => e.data.published),
     getCollection('entities', e => e.data.published),
     getCollection('design', e => e.data.published),
     getCollection('blog', e => e.data.published),
   ]);
 
   return [
-    ...works.map(doc => ({
-      type: 'works' as const,
+    ...text.map(doc => ({
+      type: 'text' as const,
       id: doc.id,
       title: doc.data.title,
       excerpt: doc.data.excerpt ?? '',
       entities: doc.data.entities ?? [],
       tags: doc.data.tags ?? [],
-      url: `/works/${doc.id}`,
+      url: getTextEntryUrl(doc),
+    })),
+    ...stories.map(doc => ({
+      type: 'story' as const,
+      id: doc.id,
+      title: doc.data.title,
+      excerpt: doc.data.description ?? '',
+      entities: doc.data.primaryEntities ?? [],
+      tags: doc.data.tags ?? [],
+      url: getStoryEntryUrl(doc),
     })),
     ...entities.map(doc => ({
       type: 'entity' as const,

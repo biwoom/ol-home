@@ -1,0 +1,44 @@
+---
+interface Props {
+  title: string;
+  subtitle?: string;
+  series?: string;
+  version?: string;
+  date?: string;
+  size?: string;
+  variant?: 'default' | 'alt' | 'muted';
+  href?: string;
+  isNew?: boolean;
+  badge?: string;
+}
+
+const { title, subtitle, series, version, date, size, variant = 'default', href, isNew, badge } = Astro.props;
+---
+
+<a class="ol-story-card" href={href ?? '#'}>
+  <div class={`ol-story-cover${variant === 'alt' ? ' alt' : variant === 'muted' ? ' muted' : ''}`}>
+    <div>
+      {series && <div class="sub">{series}</div>}
+      <div class="title ol-kr" style="margin-top: 10px;">{title}</div>
+      {subtitle && <div class="sub" style="margin-top: 8px;">{subtitle}</div>}
+    </div>
+  </div>
+  <div class="ol-story-meta">
+    <div class="title-row">
+      <h4 class="ol-kr">{title}</h4>
+      {(badge || version) && (
+        <span class:list={['ol-badge', isNew ? 'ol-badge-accent ol-badge-dot' : '']}>
+          {badge ?? version}
+        </span>
+      )}
+    </div>
+    {subtitle && <div class="sub ol-kr">{subtitle}</div>}
+    {(size || date) && (
+      <div class="meta-row">
+        {size && <span>{size}</span>}
+        {size && date && <span>·</span>}
+        {date && <span>{date}</span>}
+      </div>
+    )}
+  </div>
+</a>

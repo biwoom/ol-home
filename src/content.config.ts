@@ -123,14 +123,20 @@ const blogCollection = defineCollection({
   }),
 });
 
-// works — 번역, 주석, 연구 노트를 담는 살아 있는 문서
-const worksCollection = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/works' }),
+// text — 경전·논서·선어록·강의록을 번역하고 주석한 문헌 콘텐츠
+const textCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/text' }),
   schema: z.object({
     title: z.string(),
+    kind: z.enum(['series', 'document']).default('document'),
+    description: z.string().optional(),
+    coverAsset: z.string().optional(),
+    thumbnailAsset: z.string().optional(),
     series: z.string().optional(),
+    seriesSlug: z.string().optional(),
     seriesOrder: z.number().default(0),
     part: z.string().optional(),
+    partSlug: z.string().optional(),
     partOrder: z.number().default(0),
     group: z.string().optional(),
     groupOrder: z.number().default(0),
@@ -148,6 +154,7 @@ const worksCollection = defineCollection({
       passage: z.string().optional(),
     })).default([]),
     tags: z.array(z.string()).default([]),
+    tagAliases: z.record(z.string(), z.array(z.string())).default({}),
     prefixTags: z.array(z.string()).default([]),
     authors: z.array(z.string()).default([]),
     license: z.string().default('CC0'),
@@ -159,21 +166,32 @@ const worksCollection = defineCollection({
   }),
 });
 
-// book — 완결된 출판물 메타데이터 (서지 정보)
-const bookCollection = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/book' }),
+// story — 불교의 인물·설화·가르침을 이야기 형식으로 재구성한 서사 콘텐츠
+const storyCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/story' }),
   schema: z.object({
     title: z.string(),
     subtitle: z.string().optional(),
     series: z.string().optional(),
+    seriesSlug: z.string().optional(),
+    seriesOrder: z.number().default(0),
+    part: z.string().optional(),
+    partSlug: z.string().optional(),
+    partOrder: z.number().default(0),
+    group: z.string().optional(),
+    groupSlug: z.string().optional(),
+    groupOrder: z.number().default(0),
+    chapter: z.number().optional(),
+    order: z.number().default(0),
     category: z.string().optional(),
     version: z.string().default('v1.0'),
     status: z.enum(['draft', 'revising', 'ready', 'published']).default('draft'),
     publishedAt: z.coerce.date(),
-    htmlPath: z.string(),
+    htmlAsset: z.string(),
     primaryEntities: z.array(z.string()).default([]),
     description: z.string().optional(),
     tags: z.array(z.string()).default([]),
+    tagAliases: z.record(z.string(), z.array(z.string())).default({}),
     prefixTags: z.array(z.string()).default([]),
     license: z.string().default('CC0'),
     licenseUrl: z.string().optional(),
@@ -217,12 +235,12 @@ const designCollection = defineCollection({
     tradition: z.string().optional(),
     entities: z.array(z.string()).default([]),
     relatedWorks: z.array(z.string()).default([]),
-    thumbnailPath: z.string().optional(),
-    imagePath: z.string().optional(),
-    previewPaths: z.array(z.string()).default([]),
+    thumbnailAsset: z.string().optional(),
+    imageAsset: z.string().optional(),
+    previewAssets: z.array(z.string()).default([]),
     imageAlt: z.string().optional(),
-    htmlPath: z.string().optional(),
-    pdfPath: z.string().optional(),
+    htmlAsset: z.string().optional(),
+    pdfAsset: z.string().optional(),
     source: z.string().optional(),
     sourceUrl: z.string().optional(),
     credits: z.array(z.string()).default([]),
@@ -277,8 +295,8 @@ const pagesCollection = defineCollection({
 });
 
 export const collections = {
-  works: worksCollection,
-  book: bookCollection,
+  text: textCollection,
+  story: storyCollection,
   blog: blogCollection,
   design: designCollection,
   ai: aiCollection,

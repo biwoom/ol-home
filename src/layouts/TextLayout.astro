@@ -1,0 +1,125 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { url } from '../lib/url';
+import { getCollection } from 'astro:content';
+import { buildTextHierarchy, getTextEntryUrl, type TextSeries } from '../lib/text';
+
+interface Props {
+  title?: string;
+  description?: string;
+  currentId?: string;
+  seriesSlug?: string;
+}
+
+const {
+  title = 'OL TEXT',
+  description = '경전·논서·선어록·강의록을 번역하고 주석한 문헌 콘텐츠',
+  currentId,
+  seriesSlug,
+} = Astro.props;
+
+const allText = await getCollection('text', e => e.data.published !== false);
+const allSeries = buildTextHierarchy(allText);
+const activeSeries: TextSeries | undefined = seriesSlug
+  ? allSeries.find(series => series.slug === seriesSlug)
+  : allSeries[0];
+
+const navSeries = activeSeries ? [activeSeries] : allSeries;
+
+const statusLabel: Record<string, string> = {
+  draft: '초고',
+  revising: '수정중',
+  ready: '완료',
+  published: '출판됨',
+};
+---
+
+<BaseLayout title={title} description={description}>
+  <button
+    class="ol-sidebar-toggle"
+    aria-label="문서 목록 열기"
+    onclick="document.documentElement.removeAttribute('data-text-sidebar')"
+  >
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+    <span>문서 목록</span>
+  </button>
+
+  <div class="ol-text-outer">
+    <aside class="ol-text-sidebar" id="text-sidebar" data-pagefind-ignore>
+      <div class="ol-text-sidebar-head">
+        <a href={url('/text')} class="ol-text-sidebar-title">TEXT</a>
+        <button
+          class="ol-text-drawer-close"
+          aria-label="목차 닫기"
+          onclick="document.documentElement.setAttribute('data-text-sidebar', 'closed')"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="ol-text-sidebar-scroll" aria-label="TEXT 문서 목록">
+        <a href={url('/text')} class="ol-text-all-link">All series</a>
+
+        {navSeries.map(series => (
+          <section class="ol-text-nav-series">
+            <a href={url(`/text/${series.slug}`)} class="ol-text-nav-series-title">
+              <span>{series.label}</span>
+              <span>{series.count}</span>
+            </a>
+
+            {series.parts.map(part => (
+              <details class="ol-text-nav-part" open>
+                <summary>
+                  <span>{part.label}</span>
+                  <span>{part.count}</span>
+                </summary>
+
+                {part.groups.map(group => (
+                  <details class="ol-text-nav-group" open>
+                    <summary>
+                      <span>{group.label}</span>
+                      <span>{group.entries.length}</span>
+                    </summary>
+                    <ul>
+                      {group.entries.map(entry => {
+                        const isActive = currentId === entry.id;
+                        const statusKey = entry.data.status ?? 'draft';
+                        return (
+                          <li>
+                            <a
+                              href={url(getTextEntryUrl(entry))}
+                              class:list={['ol-text-nav-link', { active: isActive }]}
+                              aria-current={isActive ? 'page' : undefined}
+                            >
+                              <span class="ol-text-nav-title">{entry.data.title}</span>
+                              {statusKey !== 'published' && (
+                                <span class={`ol-text-status ol-text-status--${statusKey}`}>
+                                  {statusLabel[statusKey]}
+                                </span>
+                              )}
+                            </a>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </details>
+                ))}
+              </details>
+            ))}
+          </section>
+        ))}
+      </nav>
+    </aside>
+
+    <main class="ol-text-main">
+      <slot />
+    </main>
+  </div>
+</BaseLayout>

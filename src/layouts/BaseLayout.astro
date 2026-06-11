@@ -81,9 +81,13 @@ const ogImageUrl = ogImage
       document.documentElement.classList.toggle('dark', theme === 'dark');
     })();
   </script>
-  <!-- Works sidebar: 기본 닫힌 상태 -->
+  <!-- Text sidebar: 모바일에서만 기본 닫힘 상태 -->
   <script is:inline>
-    document.documentElement.setAttribute('data-works-sidebar', 'closed');
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      document.documentElement.setAttribute('data-text-sidebar', 'closed');
+    } else {
+      document.documentElement.removeAttribute('data-text-sidebar');
+    }
   </script>
 </head>
 <body class="ol-kr">

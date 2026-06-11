@@ -1,0 +1,344 @@
+---
+import { getCollection, render } from 'astro:content';
+import TextLayout from '../../../layouts/TextLayout.astro';
+import { url } from '../../../lib/url';
+import { getTextDocSlug, getTextEntryUrl, getTextSeriesSlug, formatTextTag, isTextDocumentEntry, getTextSeries } from '../../../lib/text';
+
+export async function getStaticPaths() {
+  const texts = await getCollection('text', e => e.data.published !== false && isTextDocumentEntry(e));
+  return texts.map(entry => ({
+    params: {
+      series: getTextSeriesSlug(entry),
+      slug: getTextDocSlug(entry),
+    },
+    props: { entry, seriesSlug: getTextSeriesSlug(entry) },
+  }));
+}
+
+const { entry, seriesSlug } = Astro.props;
+const { Content } = await render(entry);
+const textEntries = await getCollection('text', e => e.data.published !== false);
+const currentSeries = getTextSeries(textEntries, seriesSlug);
+const currentIndex = currentSeries?.entries.findIndex(item => item.id === entry.id) ?? -1;
+const prevEntry = currentIndex > 0 ? currentSeries?.entries[currentIndex - 1] : undefined;
+const nextEntry = currentSeries && currentIndex >= 0 && currentIndex < currentSeries.entries.length - 1
+  ? currentSeries.entries[currentIndex + 1]
+  : undefined;
+
+const statusLabel: Record<string, string> = {
+  draft: '초고',
+  revising: '수정중',
+  ready: '완료',
+  published: '출판됨',
+};
+const statusKey = entry.data.status ?? 'draft';
+const hasRightsInfo = Boolean(
+  entry.data.license || entry.data.rightsHolder || entry.data.copyrightNotice || entry.data.authors.length
+);
+const currentUrl = url(getTextEntryUrl(entry));
+---
+
+<TextLayout
+  title={`${entry.data.title} — OL TEXT`}
+  description={entry.data.excerpt}
+  currentId={entry.id}
+  seriesSlug={seriesSlug}
+>
+  <article class="ol-text-article">
+    <header class="ol-text-doc-header">
+      <div class="ol-text-doc-topline">
+        <div class="ol-text-breadcrumb">
+          <a href={url('/text')}>TEXT</a>
+          <span>/</span>
+          {entry.data.series && <a href={url(`/text/${seriesSlug}`)}>{entry.data.series}</a>}
+          {entry.data.part && (
+            <>
+              <span>/</span>
+              <span>{entry.data.part}</span>
+            </>
+          )}
+        </div>
+
+        <div class="ol-text-doc-tools">
+          <div class="ol-text-toc-dropdown" id="ol-text-toc-dropdown">
+            <button class="ol-text-tool-btn" type="button" aria-expanded="false" aria-controls="ol-text-toc-panel">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <circle cx="4" cy="6" r="1"/>
+                <circle cx="4" cy="12" r="1"/>
+                <circle cx="4" cy="18" r="1"/>
+              </svg>
+              <span class="ol-text-tool-label">On this page</span>
+            </button>
+            <div class="ol-text-toc-panel" id="ol-text-toc-panel">
+              <ul id="ol-toc-list"></ul>
+            </div>
+          </div>
+
+        <div class="ol-copy-dropdown" data-copy-dropdown data-copy-url={currentUrl} data-copy-title={entry.data.title} data-copy-source=".ol-prose">
+            <button class="ol-text-tool-btn" type="button" aria-expanded="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="9" y="9" width="11" height="11" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span class="ol-text-tool-label">Copy</span>
+            </button>
+            <div class="ol-copy-panel">
+              <button type="button" data-copy-kind="link">링크 복사</button>
+              <button type="button" data-copy-kind="markdown">마크다운 복사</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h1 class="ol-kr">{entry.data.title}</h1>
+
+      {entry.data.excerpt && (
+        <p class="ol-kr">{entry.data.excerpt}</p>
+      )}
+
+      <div class="ol-text-doc-actions">
+        <div class="ol-text-doc-meta">
+          <span class={`ol-text-status ol-text-status--${statusKey}`}>
+            {statusLabel[statusKey]}
+          </span>
+          {entry.data.date && (
+            <span class="ol-mono-label">
+              {new Date(entry.data.date).toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {entry.data.tags.length > 0 && (
+        <div class="ol-text-doc-tags">
+          {entry.data.tags.map(tag => {
+            const parsed = formatTextTag(tag);
+            return (
+              <span class="ol-text-tag" title={(entry.data.tagAliases[tag] ?? []).join(', ')}>
+                <span>{parsed.prefix}</span>
+                <strong>{parsed.label}</strong>
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {hasRightsInfo && (
+        <div class="ol-text-rights ol-kr">
+          {entry.data.authors.length > 0 && <span>저자: {entry.data.authors.join(', ')}</span>}
+          {entry.data.rightsHolder && <span>저작권자: {entry.data.rightsHolder}</span>}
+          {entry.data.license && (
+            <span>
+              라이선스: {entry.data.licenseUrl ? (
+                <a href={entry.data.licenseUrl} target="_blank" rel="noopener noreferrer">
+                  {entry.data.license}
+                </a>
+              ) : entry.data.license}
+            </span>
+          )}
+          {entry.data.copyrightNotice && <span>{entry.data.copyrightNotice}</span>}
+        </div>
+      )}
+    </header>
+
+    <div class="ol-prose ol-kr">
+      <Content />
+    </div>
+
+    {(prevEntry || nextEntry) && (
+      <nav class="ol-doc-nav" aria-label="이전 다음 문서">
+        {prevEntry ? (
+          <a class="ol-doc-nav-item ol-doc-nav-item--prev" href={url(getTextEntryUrl(prevEntry))}>
+            <span class="ol-doc-nav-kicker">이전 문서</span>
+            <strong class="ol-kr">{prevEntry.data.title}</strong>
+          </a>
+        ) : <span class="ol-doc-nav-spacer" />}
+        {nextEntry ? (
+          <a class="ol-doc-nav-item ol-doc-nav-item--next" href={url(getTextEntryUrl(nextEntry))}>
+            <span class="ol-doc-nav-kicker">다음 문서</span>
+            <strong class="ol-kr">{nextEntry.data.title}</strong>
+          </a>
+        ) : <span class="ol-doc-nav-spacer" />}
+      </nav>
+    )}
+
+    {entry.data.sources.length > 0 && (
+      <footer class="ol-text-sources">
+        <h2 class="ol-kicker">참고 문헌</h2>
+        <ul>
+          {entry.data.sources.map(src => (
+            <li>
+              <span class="ol-kr">{src.text}</span>
+              {src.passage && <span>{src.passage}</span>}
+            </li>
+          ))}
+        </ul>
+      </footer>
+    )}
+  </article>
+</TextLayout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const normalizeMarkdown = (value: string) => value
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/[ \t]+\n/g, '\n')
+      .trim();
+
+    const escapeMarkdown = (value: string) => value.replace(/([\\`*_{}\[\]()#+\-.!>])/g, '\\$1');
+
+    const inlineMarkdown = (node: Node): string => {
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+      if (!(node instanceof HTMLElement)) return '';
+
+      if (node.tagName === 'BR') return '  \n';
+      if (node.tagName === 'CODE' && node.parentElement?.tagName !== 'PRE') return `\`${node.textContent ?? ''}\``;
+      if (node.tagName === 'STRONG' || node.tagName === 'B') return `**${Array.from(node.childNodes).map(inlineMarkdown).join('')}**`;
+      if (node.tagName === 'EM' || node.tagName === 'I') return `*${Array.from(node.childNodes).map(inlineMarkdown).join('')}*`;
+      if (node.tagName === 'A') {
+        const label = normalizeMarkdown(Array.from(node.childNodes).map(inlineMarkdown).join('')) || node.textContent || node.getAttribute('href') || '';
+        const href = node.getAttribute('href') || '';
+        return href ? `[${label}](${href})` : label;
+      }
+      if (node.tagName === 'IMG') {
+        const alt = node.getAttribute('alt') || '';
+        const src = node.getAttribute('src') || '';
+        return src ? `![${alt}](${src})` : '';
+      }
+
+      return Array.from(node.childNodes).map(inlineMarkdown).join('');
+    };
+
+    const blockMarkdown = (node: Node, depth = 0): string => {
+      if (node.nodeType === Node.TEXT_NODE) return normalizeMarkdown(node.textContent ?? '');
+      if (!(node instanceof HTMLElement)) return '';
+
+      if (node.matches('script, style, button')) return '';
+      if (node.tagName === 'PRE') {
+        const code = node.textContent?.replace(/\n$/, '') ?? '';
+        return `\`\`\`\n${code}\n\`\`\``;
+      }
+
+      if (/^H[1-6]$/.test(node.tagName)) {
+        const level = Number(node.tagName[1]);
+        return `${'#'.repeat(level)} ${normalizeMarkdown(Array.from(node.childNodes).map(inlineMarkdown).join(''))}`;
+      }
+
+      if (node.tagName === 'P') return normalizeMarkdown(Array.from(node.childNodes).map(inlineMarkdown).join(''));
+      if (node.tagName === 'BLOCKQUOTE') {
+        return normalizeMarkdown(Array.from(node.childNodes).map(child => blockMarkdown(child, depth)).join('\n\n'))
+          .split('\n')
+          .map(line => line ? `> ${line}` : '>')
+          .join('\n');
+      }
+
+      if (node.tagName === 'UL' || node.tagName === 'OL') {
+        return Array.from(node.children)
+          .filter(child => child.tagName === 'LI')
+          .map((child, index) => {
+            const marker = node.tagName === 'OL' ? `${index + 1}. ` : '- ';
+            const content = normalizeMarkdown(Array.from(child.childNodes).map(liChild => {
+              if (liChild instanceof HTMLElement && (liChild.tagName === 'UL' || liChild.tagName === 'OL')) {
+                return `\n${blockMarkdown(liChild, depth + 1)}`;
+              }
+              return liChild instanceof HTMLElement ? blockMarkdown(liChild, depth + 1) : inlineMarkdown(liChild);
+            }).join(''));
+            return `${'  '.repeat(depth)}${marker}${content.replace(/\n/g, `\n${'  '.repeat(depth + 1)}`)}`;
+          })
+          .join('\n');
+      }
+
+      if (node.tagName === 'HR') return '---';
+
+      const markdown = Array.from(node.childNodes)
+        .map(child => child instanceof HTMLElement ? blockMarkdown(child, depth) : inlineMarkdown(child))
+        .filter(Boolean)
+        .join('\n\n');
+
+      return normalizeMarkdown(markdown);
+    };
+
+    const sourceToMarkdown = (source: HTMLElement, title: string) => {
+      const body = Array.from(source.childNodes)
+        .map(child => blockMarkdown(child))
+        .filter(Boolean)
+        .join('\n\n');
+      return normalizeMarkdown(`# ${escapeMarkdown(title)}\n\n${body}`);
+    };
+
+    document.querySelectorAll<HTMLElement>('[data-copy-dropdown]').forEach(copyDropdown => {
+      const copyTrigger = copyDropdown.querySelector<HTMLButtonElement>('.ol-text-tool-btn');
+      const copyPanel = copyDropdown.querySelector<HTMLElement>('.ol-copy-panel');
+      const title = copyDropdown.dataset.copyTitle ?? document.title;
+      const href = new URL(copyDropdown.dataset.copyUrl ?? window.location.pathname, window.location.origin).href;
+      if (!copyTrigger || !copyPanel) return;
+
+      copyTrigger.addEventListener('click', event => {
+        event.stopPropagation();
+        const isOpen = copyTrigger.getAttribute('aria-expanded') === 'true';
+        copyTrigger.setAttribute('aria-expanded', String(!isOpen));
+      });
+
+      copyPanel.addEventListener('click', async event => {
+        event.stopPropagation();
+        const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-copy-kind]');
+        if (!button) return;
+        const sourceSelector = copyDropdown.dataset.copySource;
+        const source = sourceSelector ? document.querySelector<HTMLElement>(sourceSelector) : null;
+        const value = button.dataset.copyKind === 'markdown' && source
+          ? sourceToMarkdown(source, title)
+          : href;
+        await navigator.clipboard?.writeText(value);
+        const original = button.textContent ?? '';
+        button.textContent = '복사됨';
+        copyTrigger.setAttribute('aria-expanded', 'false');
+        window.setTimeout(() => { button.textContent = original; }, 1200);
+      });
+    });
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll<HTMLButtonElement>('[data-copy-dropdown] > button').forEach(button => {
+        button.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    const dropdown = document.getElementById('ol-text-toc-dropdown');
+    const trigger = dropdown?.querySelector<HTMLButtonElement>('button');
+    const panel = document.getElementById('ol-text-toc-panel');
+    const tocList = document.getElementById('ol-toc-list');
+    const article = document.querySelector('.ol-prose');
+    if (!dropdown || !trigger || !panel || !tocList || !article) return;
+
+    const headings = Array.from(article.querySelectorAll<HTMLHeadingElement>('h2, h3'));
+    if (headings.length === 0) {
+      dropdown.style.display = 'none';
+      return;
+    }
+
+    headings.forEach((heading, index) => {
+      if (!heading.id) heading.id = `heading-${index}`;
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `#${heading.id}`;
+      a.textContent = heading.textContent ?? '';
+      a.dataset.level = heading.tagName === 'H3' ? '3' : '2';
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+
+    trigger.addEventListener('click', event => {
+      event.stopPropagation();
+      const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+      trigger.setAttribute('aria-expanded', String(!isOpen));
+    });
+    panel.addEventListener('click', event => event.stopPropagation());
+    document.addEventListener('click', () => trigger.setAttribute('aria-expanded', 'false'));
+  });
+</script>

@@ -15,16 +15,16 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 
-const previewPaths = entry.data.previewPaths.length > 0
-  ? entry.data.previewPaths
-  : [entry.data.imagePath ?? entry.data.thumbnailPath].filter(Boolean);
-const previewPath = previewPaths[0];
+const previewAssets = entry.data.previewAssets.length > 0
+  ? entry.data.previewAssets
+  : [entry.data.imageAsset ?? entry.data.thumbnailAsset].filter(Boolean);
+const previewAsset = previewAssets[0];
 const description = entry.data.description ?? entry.data.summary ?? entry.data.imageAlt ?? entry.data.title;
 const allTags = entry.data.tags;
-const showImageDownload = entry.data.format === 'image' && Boolean(entry.data.imagePath);
+const showImageDownload = entry.data.format === 'image' && Boolean(entry.data.imageAsset);
 
-function designAsset(path?: string) {
-  return path ? url(`/design/${path}`) : '';
+function designAsset(asset?: string) {
+  return asset ? url(`/generated/design/${entry.id}/${asset}`) : '';
 }
 ---
 
@@ -48,17 +48,17 @@ function designAsset(path?: string) {
         <div class="ol-design-detail">
 
           <div class="ol-design-detail-img-col">
-            {previewPath ? (
+            {previewAsset ? (
               <div class="ol-design-preview-stack">
-                {previewPaths.map((path, index) => (
+                {previewAssets.map((asset, index) => (
                   <figure class="ol-design-detail-img-frame">
                     <img
-                      src={designAsset(path)}
-                      alt={`${entry.data.imageAlt ?? entry.data.title}${previewPaths.length > 1 ? ` ${index + 1}` : ''}`}
+                      src={designAsset(asset)}
+                      alt={`${entry.data.imageAlt ?? entry.data.title}${previewAssets.length > 1 ? ` ${index + 1}` : ''}`}
                       loading={index === 0 ? 'eager' : 'lazy'}
                       decoding="async"
                     />
-                    {previewPaths.length > 1 && (
+                    {previewAssets.length > 1 && (
                       <figcaption>PREVIEW {index + 1}</figcaption>
                     )}
                   </figure>
@@ -84,11 +84,11 @@ function designAsset(path?: string) {
               )}
             </header>
 
-            {(entry.data.htmlPath || entry.data.pdfPath || showImageDownload) && (
+            {(entry.data.htmlAsset || entry.data.pdfAsset || showImageDownload) && (
               <div class="ol-design-detail-actions">
-                {entry.data.htmlPath && (
+                {entry.data.htmlAsset && (
                   <a
-                    href={designAsset(entry.data.htmlPath)}
+                    href={designAsset(entry.data.htmlAsset)}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="ol-btn ol-btn-primary"
@@ -101,9 +101,9 @@ function designAsset(path?: string) {
                     웹브라우저로 보기
                   </a>
                 )}
-                {entry.data.pdfPath && (
+                {entry.data.pdfAsset && (
                   <a
-                    href={designAsset(entry.data.pdfPath)}
+                    href={designAsset(entry.data.pdfAsset)}
                     download
                     class="ol-btn ol-btn-outline"
                   >
@@ -113,10 +113,10 @@ function designAsset(path?: string) {
                     PDF 다운로드
                   </a>
                 )}
-                {showImageDownload && entry.data.imagePath && (
+                {showImageDownload && entry.data.imageAsset && (
                   <a
-                    href={designAsset(entry.data.imagePath)}
-                    download={entry.data.imagePath}
+                    href={designAsset(entry.data.imageAsset)}
+                    download={entry.data.imageAsset}
                     class="ol-btn ol-btn-outline"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

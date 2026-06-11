@@ -2,9 +2,10 @@
 import { url } from '../../lib/url';
 import { getCollection } from 'astro:content';
 import { getLatestAtlasBuild } from '../../lib/atlas';
+import { isTextDocumentEntry } from '../../lib/text';
 
-const works = await getCollection('works', ({ data }) => data.published);
-const books = await getCollection('book', ({ data }) => data.published);
+const texts = await getCollection('text', entry => entry.data.published && isTextDocumentEntry(entry));
+const stories = await getCollection('story', ({ data }) => data.published);
 const blogs = await getCollection('blog', ({ data }) => data.published);
 const designs = await getCollection('design', ({ data }) => data.published);
 
@@ -13,31 +14,31 @@ const atlasVersion = getLatestAtlasBuild().version;
 <section class="ol-section">
   <div class="ol-container">
     <div class="ol-section-head">
-      <span class="ol-kicker">PROJECTS · 다섯 갈래</span>
-      <h2 class="ol-kr">OL이 만드는 다섯 가지</h2>
-      <p class="ol-kr">각 프로젝트는 독립적으로 다운로드·열람·사용할 수 있으며, 모두 단일 HTML 파일이거나 오픈소스 자료로 배포됩니다.</p>
+      <span class="ol-kicker">PROJECTS · opensource</span>
+      <h2 class="ol-kr">OL이 만드는 불교콘텐츠</h2>
+      <p class="ol-kr">OL프로젝트의 라이선스는 모두 MIT · CC0 · 오픈소스 자료로 배포됩니다.</p>
     </div>
 
     <div class="ol-grid-3">
 
-      <!-- 06 WORKS -->
-      <a href={url('/works')} class="ol-product-card">
-        <span class="ol-mono-label">06 / WORKS</span>
-        <h3>OL WORKS</h3>
-        <p class="ol-kr">지혜를 담는 문서 라이브러리. 붓다의 가르침을 담은 번역, 주석, 연구 노트가 이곳에서 열리고 이어집니다.</p>
+      <!-- 06 TEXT -->
+      <a href={url('/text')} class="ol-product-card">
+        <span class="ol-mono-label">06 / TEXT</span>
+        <h3>OL TEXT</h3>
+        <p class="ol-kr">경전·논서·선어록·강의록을 번역하고 주석한 문헌 콘텐츠가 이곳에서 열리고 이어집니다.</p>
         <div class="ol-product-foot">
-          <span class="ol-code">{works.length} documents</span>
+          <span class="ol-code">{texts.length} documents</span>
           <span class="ol-arrow">→</span>
         </div>
       </a>
 
-      <!-- 02 BOOK -->
-      <a href={url('/book')} class="ol-product-card">
+      <!-- 02 STORY -->
+      <a href={url('/story')} class="ol-product-card">
         <span class="ol-mono-label">02 / LIBRARY</span>
-        <h3>OL BOOK</h3>
-        <p class="ol-kr">한 권의 책과 같은 불교 콘텐츠 모음. 불교이야기, 명상동화, 불교전문서적. <em>"현재는 준비중"</em> </p>
+        <h3>OL STORY</h3>
+        <p class="ol-kr">불교의 인물·설화·가르침을 이야기 형식으로 재구성한 서사 콘텐츠입니다.</p>
         <div class="ol-product-foot">
-          <span class="ol-code">{books.length} 권 / 진행 중</span>
+          <span class="ol-code">{stories.length} 권 / 진행 중</span>
           <span class="ol-arrow">→</span>
         </div>
       </a>
@@ -76,7 +77,7 @@ const atlasVersion = getLatestAtlasBuild().version;
       </a>
       
       <!-- 01 ATLAS -->
-      <a href={url('/atlas')} class="ol-product-card">
+      <!-- <a href={url('/atlas')} class="ol-product-card">
         <span class="ol-mono-label">01 / TOOL</span>
         <h3>OL ATLAS</h3>
         <p class="ol-kr">단일 HTML 파일로 만들어진 불교 콘텐츠 제작·열람 도구. 설치 없이 브라우저 하나면 충분합니다.</p>
@@ -84,7 +85,7 @@ const atlasVersion = getLatestAtlasBuild().version;
           <span class="ol-code">v{atlasVersion}</span>
           <span class="ol-arrow">→</span>
         </div>
-      </a>
+      </a> -->
 
       <!-- + OPEN -->
       <div class="ol-product-card dashed">

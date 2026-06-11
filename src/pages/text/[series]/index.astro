@@ -1,0 +1,329 @@
+---
+import { getCollection } from 'astro:content';
+import TextLayout from '../../../layouts/TextLayout.astro';
+import { url } from '../../../lib/url';
+import { buildTextHierarchy, getTextEntryUrl, formatTextTag } from '../../../lib/text';
+
+export async function getStaticPaths() {
+  const texts = await getCollection('text', e => e.data.published !== false);
+  return buildTextHierarchy(texts).map(series => ({
+    params: { series: series.slug },
+    props: { series },
+  }));
+}
+
+const { series } = Astro.props;
+const seriesTags = [...new Set([
+  ...(series.meta?.data.tags ?? []),
+  ...series.entries.flatMap(entry => entry.data.tags),
+])].sort((a, b) => a.localeCompare(b, 'ko'));
+const seriesDescription = series.meta?.data.description ?? series.meta?.data.excerpt;
+const tagIndex = new Map<string, Array<{
+  partLabel: string;
+  partOrder: number;
+  groupLabel: string;
+  groupOrder: number;
+  entryId: string;
+  title: string;
+  chapter: number | undefined;
+  href: string;
+}>>();
+
+for (const part of series.parts) {
+  for (const group of part.groups) {
+    for (const entry of group.entries) {
+      for (const tag of entry.data.tags) {
+        const items = tagIndex.get(tag) ?? [];
+        items.push({
+          partLabel: part.label,
+          partOrder: part.order,
+          groupLabel: group.label,
+          groupOrder: group.order,
+          entryId: entry.id,
+          title: entry.data.title,
+          chapter: entry.data.chapter,
+          href: url(getTextEntryUrl(entry)),
+        });
+        tagIndex.set(tag, items);
+      }
+    }
+  }
+}
+
+const tagGroups = Array.from(tagIndex.entries())
+  .map(([tag, items]) => {
+    const parsed = formatTextTag(tag);
+    return { tag, ...parsed, items };
+  })
+  .sort((a, b) => a.prefix.localeCompare(b.prefix, 'ko') || a.label.localeCompare(b.label, 'ko'))
+  .reduce<Array<{
+    prefix: string;
+    tags: Array<{ tag: string; label: string; items: Array<{
+      partLabel: string;
+      partOrder: number;
+      groupLabel: string;
+      groupOrder: number;
+      entryId: string;
+      title: string;
+      chapter: number | undefined;
+      href: string;
+    }> }>;
+  }>>((groups, tag) => {
+    const group = groups.find(item => item.prefix === tag.prefix);
+    const tagItem = { tag: tag.tag, label: tag.label, items: tag.items };
+    if (group) group.tags.push(tagItem);
+    else groups.push({ prefix: tag.prefix, tags: [tagItem] });
+    return groups;
+  }, []);
+
+const tagResultGroups = Array.from(tagIndex.entries())
+  .map(([tag, items]) => {
+    const parsed = formatTextTag(tag);
+    const parts = Array.from(
+      items.reduce<Map<string, {
+        partLabel: string;
+        partOrder: number;
+        groups: Map<string, {
+          groupLabel: string;
+          groupOrder: number;
+          entries: typeof items;
+        }>;
+      }>>((partMap, item) => {
+        const part = partMap.get(item.partLabel) ?? {
+          partLabel: item.partLabel,
+          partOrder: item.partOrder,
+          groups: new Map(),
+        };
+        const group = part.groups.get(item.groupLabel) ?? {
+          groupLabel: item.groupLabel,
+          groupOrder: item.groupOrder,
+          entries: [],
+        };
+        group.entries.push(item);
+        part.groups.set(item.groupLabel, group);
+        partMap.set(item.partLabel, part);
+        return partMap;
+      }, new Map()).values()
+    )
+      .sort((a, b) => a.partOrder - b.partOrder)
+      .map(part => ({
+        ...part,
+        groups: Array.from(part.groups.values()).sort((a, b) => a.groupOrder - b.groupOrder),
+      }));
+    return { tag, ...parsed, count: items.length, parts };
+  })
+  .sort((a, b) => a.prefix.localeCompare(b.prefix, 'ko') || a.label.localeCompare(b.label, 'ko'));
+---
+
+<TextLayout
+  title={`${series.label} — OL TEXT`}
+  description={seriesDescription ?? `${series.label} 시리즈 문헌 콘텐츠`}
+  seriesSlug={series.slug}
+>
+  <article class="ol-text-article ol-text-series-page">
+    <header class="ol-text-doc-header">
+      <div class="ol-text-breadcrumb">
+        <a href={url('/text')}>TEXT</a>
+        <span>/</span>
+        <span>{series.label}</span>
+      </div>
+      <h1 class="ol-kr">{series.label}</h1>
+      <p class="ol-kr">
+        {seriesDescription ?? `이 시리즈는 ${series.count}개의 문서를 part, chapter 구조로 정리합니다.`}
+      </p>
+
+      {tagGroups.length > 0 && (
+        <div class="ol-text-tag-index" data-text-tag-index>
+          {tagGroups.map(group => (
+            <div class="ol-text-tag-menu">
+              <button class="ol-text-tag-menu-trigger" type="button" aria-expanded="false" data-text-tag-menu-trigger>
+                <span>{group.prefix}</span>
+                <strong>{group.tags.length}</strong>
+              </button>
+              <div class="ol-text-tag-menu-panel">
+                {group.tags.map(tag => (
+                  <button type="button" data-text-tag-select={tag.tag} data-text-tag-label={tag.label}>
+                    <span>{tag.label}</span>
+                    <strong>{tag.items.length}</strong>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </header>
+
+    {series.entries.length > 0 && tagGroups.length > 0 && (
+      <section class="ol-text-tag-results" data-text-tag-results hidden>
+        <div class="ol-text-tag-results-head">
+          <div>
+            <span class="ol-kicker">Tag index</span>
+            <h2 class="ol-kr" data-text-tag-results-title>태그 문서</h2>
+            <p class="ol-text-tag-result-summary" data-text-tag-results-summary>
+              <em>선택한 태그를 모두 포함한 문서를 표시합니다.</em>
+              <strong data-text-tag-results-count>0개 문서</strong>
+            </p>
+          </div>
+          <button type="button" data-text-tag-results-clear>초기화</button>
+        </div>
+        <div class="ol-text-tag-selected" data-text-selected-tags></div>
+        <p class="ol-text-tag-result-empty ol-kr" data-text-tag-results-empty hidden>
+          선택한 태그 조합에 해당하는 문서가 없습니다.
+        </p>
+        <div class="ol-text-tag-result-panel" data-text-tag-result-panel>
+          <div class="ol-text-tag-result-list">
+            {series.parts.map((part, partIndex) => (
+              <section data-text-result-part>
+                <h3>PART {partIndex + 1} · {part.label}</h3>
+                {part.groups.map(group => (
+                  <div class="ol-text-tag-result-group" data-text-result-group>
+                    <p>{group.label}</p>
+                    <ol>
+                      {group.entries.map((entry, entryIndex) => (
+                        <li data-text-result-entry data-tags={JSON.stringify(entry.data.tags)}>
+                          <a href={url(getTextEntryUrl(entry))}>
+                            <span>{String(entry.data.chapter ?? entryIndex + 1).padStart(2, '0')}</span>
+                            <strong class="ol-kr">{entry.data.title}</strong>
+                          </a>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </section>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <div class="ol-text-series-sections">
+      {series.parts.map(part => (
+        <section class="ol-text-series-section">
+          <div class="ol-text-series-section-head">
+            <h2 class="ol-kr">{part.label}</h2>
+            <span>{part.count} documents</span>
+          </div>
+
+          {part.groups.map(group => (
+            <div class="ol-text-series-group">
+              <h3 class="ol-kr">{group.label}</h3>
+              <div class="ol-text-series-doc-list">
+                {group.entries.map((entry, index) => (
+                  <a class="ol-text-series-doc" href={url(getTextEntryUrl(entry))}>
+                    <span class="ol-text-series-doc-num">
+                      {String(entry.data.chapter ?? index + 1).padStart(2, '0')}
+                    </span>
+                    <span>
+                      <strong class="ol-kr">{entry.data.title}</strong>
+                      {entry.data.excerpt && <em class="ol-kr">{entry.data.excerpt}</em>}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      ))}
+    </div>
+  </article>
+</TextLayout>
+
+<script>
+  const textTagIndex = document.querySelector<HTMLElement>('[data-text-tag-index]');
+  const textTagResults = document.querySelector<HTMLElement>('[data-text-tag-results]');
+  const textTagResultsTitle = textTagResults?.querySelector<HTMLElement>('[data-text-tag-results-title]');
+  const textTagResultsCount = textTagResults?.querySelector<HTMLElement>('[data-text-tag-results-count]');
+  const textSelectedTags = textTagResults?.querySelector<HTMLElement>('[data-text-selected-tags]');
+  const textTagResultsEmpty = textTagResults?.querySelector<HTMLElement>('[data-text-tag-results-empty]');
+  const selectedTextTags = new Map<string, string>();
+
+  const closeTextTagMenus = () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-text-tag-menu-trigger]').forEach(button => {
+      button.setAttribute('aria-expanded', 'false');
+    });
+  };
+
+  const clearTextTags = () => {
+    selectedTextTags.clear();
+    updateTextTagResults();
+  };
+
+  const updateTextTagResults = () => {
+    if (!textTagResults) return;
+    const selected = Array.from(selectedTextTags.keys());
+    textTagResults.hidden = selected.length === 0;
+    if (textTagResultsTitle) textTagResultsTitle.textContent = selected.length > 0 ? `선택 태그 ${selected.length}개` : '태그 문서';
+
+    if (textSelectedTags) {
+      textSelectedTags.innerHTML = '';
+      selectedTextTags.forEach((label, tag) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.dataset.textTagRemove = tag;
+        chip.textContent = `${label} ×`;
+        textSelectedTags.appendChild(chip);
+      });
+    }
+
+    let visibleCount = 0;
+    textTagResults.querySelectorAll<HTMLElement>('[data-text-result-entry]').forEach(entry => {
+      const tags = JSON.parse(entry.dataset.tags ?? '[]') as string[];
+      const visible = selected.every(tag => tags.includes(tag));
+      entry.hidden = !visible;
+      if (visible) visibleCount += 1;
+    });
+
+    textTagResults.querySelectorAll<HTMLElement>('[data-text-result-group]').forEach(group => {
+      const visible = Boolean(group.querySelector('[data-text-result-entry]:not([hidden])'));
+      group.hidden = !visible;
+    });
+
+    textTagResults.querySelectorAll<HTMLElement>('[data-text-result-part]').forEach(part => {
+      const visible = Boolean(part.querySelector('[data-text-result-group]:not([hidden])'));
+      part.hidden = !visible;
+    });
+
+    if (textTagResultsCount) textTagResultsCount.textContent = `${visibleCount}개 문서`;
+    if (textTagResultsEmpty) textTagResultsEmpty.hidden = visibleCount > 0;
+
+    textTagIndex?.querySelectorAll<HTMLButtonElement>('[data-text-tag-select]').forEach(item => {
+      item.classList.toggle('active', selectedTextTags.has(item.dataset.textTagSelect ?? ''));
+    });
+    closeTextTagMenus();
+  };
+
+  textTagIndex?.addEventListener('click', event => {
+    event.stopPropagation();
+    const trigger = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-text-tag-menu-trigger]');
+    if (trigger) {
+      const open = trigger.getAttribute('aria-expanded') === 'true';
+      closeTextTagMenus();
+      trigger.setAttribute('aria-expanded', String(!open));
+      return;
+    }
+
+    const tagButton = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-text-tag-select]');
+    if (!tagButton) return;
+    const tag = tagButton.dataset.textTagSelect;
+    if (!tag) return;
+    if (selectedTextTags.has(tag)) selectedTextTags.delete(tag);
+    else selectedTextTags.set(tag, tagButton.dataset.textTagLabel ?? tag);
+    updateTextTagResults();
+    textTagResults?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  textSelectedTags?.addEventListener('click', event => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-text-tag-remove]');
+    if (!button?.dataset.textTagRemove) return;
+    selectedTextTags.delete(button.dataset.textTagRemove);
+    updateTextTagResults();
+  });
+
+  textTagResults?.querySelector<HTMLElement>('[data-text-tag-results-clear]')?.addEventListener('click', () => {
+    clearTextTags();
+  });
+
+  document.addEventListener('click', closeTextTagMenus);
+</script>

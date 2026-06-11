@@ -1,0 +1,210 @@
+---
+import type { PrefixTagGroup } from '../../lib/tags';
+
+interface Props {
+  id: string;
+  groups: PrefixTagGroup[];
+  targetSelector: string;
+  totalCount: number;
+  emptySelector?: string;
+  pageSize?: number;
+  loadMoreWrapSelector?: string;
+  loadMoreButtonSelector?: string;
+  loadMoreRemainingSelector?: string;
+}
+
+const {
+  id,
+  groups,
+  targetSelector,
+  totalCount,
+  emptySelector,
+  pageSize,
+  loadMoreWrapSelector,
+  loadMoreButtonSelector,
+  loadMoreRemainingSelector,
+} = Astro.props;
+---
+
+{groups.length > 0 && (
+  <section
+    class="ol-prefix-filter"
+    id={id}
+    data-prefix-filter
+    data-target-selector={targetSelector}
+    data-empty-selector={emptySelector}
+    data-page-size={pageSize}
+    data-loadmore-wrap-selector={loadMoreWrapSelector}
+    data-loadmore-button-selector={loadMoreButtonSelector}
+    data-loadmore-remaining-selector={loadMoreRemainingSelector}
+    aria-label="태그 필터"
+  >
+    <div class="ol-prefix-filter-controls">
+      <button class="ol-prefix-filter-reset active" type="button" data-filter-reset>
+        전체 <span>{totalCount}</span>
+      </button>
+
+      {groups.map(group => (
+        <details class="ol-prefix-filter-menu" data-prefix={group.prefix}>
+          <summary>
+            <span data-prefix-label>{group.prefix}</span>
+            <span class="ol-prefix-filter-count">{group.tags.length}</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </summary>
+          <div class="ol-prefix-filter-panel">
+            {group.tags.map(item => (
+              <button type="button" data-filter-tag={item.tag} data-filter-prefix={group.prefix} data-filter-label={item.label}>
+                <span>{item.label}</span>
+                <span>{item.count}</span>
+              </button>
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
+
+    <div class="ol-prefix-filter-active" data-filter-active hidden></div>
+  </section>
+)}
+
+<script>
+  function setupPrefixFilter(root: HTMLElement) {
+    if (root.dataset.filterReady === 'true') return;
+    root.dataset.filterReady = 'true';
+
+    const targetSelector = root.dataset.targetSelector;
+    if (!targetSelector) return;
+
+    const cards = Array.from(document.querySelectorAll<HTMLElement>(targetSelector));
+    const empty = root.dataset.emptySelector ? document.querySelector<HTMLElement>(root.dataset.emptySelector) : null;
+    const pageSize = Number(root.dataset.pageSize || 0);
+    const loadMoreWrap = root.dataset.loadmoreWrapSelector ? document.querySelector<HTMLElement>(root.dataset.loadmoreWrapSelector) : null;
+    const loadMoreButton = root.dataset.loadmoreButtonSelector ? document.querySelector<HTMLButtonElement>(root.dataset.loadmoreButtonSelector) : null;
+    const loadMoreRemaining = root.dataset.loadmoreRemainingSelector ? document.querySelector<HTMLElement>(root.dataset.loadmoreRemainingSelector) : null;
+    const reset = root.querySelector<HTMLButtonElement>('[data-filter-reset]');
+    const activeRow = root.querySelector<HTMLElement>('[data-filter-active]');
+    const activeTags = new Map<string, { tag: string; label: string }>();
+    let visibleCount = pageSize || Number.MAX_SAFE_INTEGER;
+
+    cards.forEach(card => {
+      card.dataset.filterDisplay = card.style.display || getComputedStyle(card).display || '';
+    });
+
+    const getCardTags = (card: HTMLElement) => {
+      try {
+        return JSON.parse(card.dataset.tags || '[]') as string[];
+      } catch {
+        return (card.dataset.tags || '').split(',').filter(Boolean);
+      }
+    };
+
+    const matches = (card: HTMLElement) => {
+      const tags = getCardTags(card);
+      return Array.from(activeTags.values()).every(item => tags.includes(item.tag));
+    };
+
+    const renderActive = () => {
+      if (!activeRow) return;
+      activeRow.innerHTML = '';
+      activeRow.hidden = activeTags.size === 0;
+
+      activeTags.forEach((item, prefix) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.clearPrefix = prefix;
+        button.textContent = `${prefix}/${item.label} ×`;
+        activeRow.appendChild(button);
+      });
+    };
+
+    const syncControls = () => {
+      reset?.classList.toggle('active', activeTags.size === 0);
+      root.querySelectorAll<HTMLElement>('[data-prefix]').forEach(menu => {
+        const prefix = menu.dataset.prefix || '';
+        const active = activeTags.get(prefix);
+        const label = menu.querySelector<HTMLElement>('[data-prefix-label]');
+        if (label) label.textContent = active ? `${prefix}: ${active.label}` : prefix;
+        menu.classList.toggle('active', Boolean(active));
+        menu.querySelectorAll<HTMLButtonElement>('[data-filter-tag]').forEach(button => {
+          button.classList.toggle('active', button.dataset.filterTag === active?.tag);
+        });
+      });
+      renderActive();
+    };
+
+    const apply = () => {
+      const matched = cards.filter(matches);
+      const matchedSet = new Set(matched);
+      cards.forEach(card => {
+        card.style.display = 'none';
+      });
+      matched.slice(0, visibleCount).forEach(card => {
+        card.style.display = card.dataset.filterDisplay || '';
+      });
+
+      empty && (empty.style.display = matched.length === 0 ? '' : 'none');
+
+      if (loadMoreWrap && loadMoreRemaining) {
+        const remaining = matched.length - visibleCount;
+        loadMoreWrap.style.display = remaining > 0 ? '' : 'none';
+        loadMoreRemaining.textContent = `(${Math.max(remaining, 0)})`;
+      }
+
+      cards.forEach(card => {
+        card.toggleAttribute('data-filtered-out', !matchedSet.has(card));
+      });
+      syncControls();
+    };
+
+    reset?.addEventListener('click', () => {
+      activeTags.clear();
+      visibleCount = pageSize || Number.MAX_SAFE_INTEGER;
+      apply();
+    });
+
+    root.querySelectorAll<HTMLButtonElement>('[data-filter-tag]').forEach(button => {
+      button.addEventListener('click', () => {
+        const prefix = button.dataset.filterPrefix;
+        const tag = button.dataset.filterTag;
+        const label = button.dataset.filterLabel || tag;
+        if (!prefix || !tag || !label) return;
+        const current = activeTags.get(prefix);
+        if (current?.tag === tag) {
+          activeTags.delete(prefix);
+        } else {
+          activeTags.set(prefix, { tag, label });
+        }
+        visibleCount = pageSize || Number.MAX_SAFE_INTEGER;
+        button.closest('details')?.removeAttribute('open');
+        apply();
+      });
+    });
+
+    activeRow?.addEventListener('click', event => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-clear-prefix]');
+      if (!button?.dataset.clearPrefix) return;
+      activeTags.delete(button.dataset.clearPrefix);
+      visibleCount = pageSize || Number.MAX_SAFE_INTEGER;
+      apply();
+    });
+
+    loadMoreButton?.addEventListener('click', () => {
+      visibleCount += pageSize || cards.length;
+      apply();
+    });
+
+    document.addEventListener('click', event => {
+      root.querySelectorAll<HTMLDetailsElement>('details[open]').forEach(details => {
+        if (!details.contains(event.target as Node)) details.removeAttribute('open');
+      });
+    });
+
+    apply();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll<HTMLElement>('[data-prefix-filter]').forEach(setupPrefixFilter);
+  });
+</script>

@@ -28,15 +28,15 @@ const kindCounts = allItems.reduce((acc, item) => {
 const allTags = [...new Set(allItems.flatMap(i => i.data.tags))]
   .sort((a, b) => a.localeCompare(b, 'ko'));
 
-function assetUrl(path?: string) {
-  return path ? url(`/design/${path}`) : '';
+function assetUrl(entryId: string, asset?: string) {
+  return asset ? url(`/generated/design/${entryId}/${asset}`) : '';
 }
 
 function itemFormats(item: typeof allItems[number]) {
   const formats = [];
-  if (item.data.htmlPath) formats.push('HTML');
-  if (item.data.pdfPath) formats.push('PDF');
-  if (item.data.imagePath && formats.length === 0) formats.push(formatLabel[item.data.format] ?? 'IMAGE');
+  if (item.data.htmlAsset) formats.push('HTML');
+  if (item.data.pdfAsset) formats.push('PDF');
+  if (item.data.imageAsset && formats.length === 0) formats.push(formatLabel[item.data.format] ?? 'IMAGE');
   return formats.length > 0 ? formats : [formatLabel[item.data.format] ?? 'IMAGE'];
 }
 ---
@@ -50,8 +50,8 @@ function itemFormats(item: typeof allItems[number]) {
       <div class="ol-container">
         <span class="ol-kicker">VISUAL LIBRARY · 불교인포그래픽</span>
         <h1 class="ol-kr">
-          불교 지식의<br>
-          <em>이해를 돕는</em> 시각 콘텐츠.
+          불교를 한 눈에,<br>
+          <em>지혜의 구조</em> 를 그리다.
         </h1>
         <p class="ol-lead ol-kr">
           OL DESIGN은 인포그래픽을 중심으로 불교 개념·서사·구조를 시각화합니다.
@@ -139,7 +139,7 @@ function itemFormats(item: typeof allItems[number]) {
 
             <div class="ol-design-grid" id="design-grid">
               {allItems.map((item, i) => {
-                const previewPath = item.data.thumbnailPath ?? item.data.imagePath;
+                const previewAsset = item.data.thumbnailAsset ?? item.data.imageAsset;
                 const tags = item.data.tags;
                 const formats = itemFormats(item);
                 return (
@@ -152,9 +152,9 @@ function itemFormats(item: typeof allItems[number]) {
                     style={i >= PAGE_SIZE ? 'display:none;' : ''}
                   >
                     <div class="ol-design-card-img">
-                      {previewPath ? (
+                      {previewAsset ? (
                         <img
-                          src={assetUrl(previewPath)}
+                          src={assetUrl(item.id, previewAsset)}
                           alt={item.data.imageAlt ?? item.data.title}
                           loading={i < 6 ? 'eager' : 'lazy'}
                           decoding="async"
