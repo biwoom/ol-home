@@ -1,6 +1,6 @@
 ---
 title: "붓다 스토리"
-series: "OL 붓다 스토리"
+series: "붓다 스토리"
 seriesSlug: "buddha-story"
 seriesOrder: 10
 part: "붓다의 생애"

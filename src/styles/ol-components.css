@@ -4094,7 +4094,7 @@ body {
 .ol-story-series-hero p {
   max-width: 720px;
   margin: 22px auto 0;
-  color: var(--ol-ink-2);
+  color: var(--ol-muted);
   font-size: 18px;
   line-height: 1.7;
 }
