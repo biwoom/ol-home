@@ -10,13 +10,13 @@ version: "260531"
 status: published
 date: 2026-06-04
 
-htmlPath: "six_steps_body_mind_infogaphic/six_steps_body_mind_infogaphic.html"
-pdfPath: "six_steps_body_mind_infogaphic/six_steps_body_mind_infogaphic.pdf"
-thumbnailPath: "six_steps_body_mind_infogaphic/thumb.jpg"
-imagePath: "six_steps_body_mind_infogaphic/preview1.jpg"
+htmlPath: "six-steps-infographic/index.html"
+pdfPath: "six-steps-infographic/six-steps-infographic.pdf"
+thumbnailPath: "six-steps-infographic/thumb.jpg"
+imagePath: "six-steps-infographic/preview1.jpg"
 previewPaths:
-  - "six_steps_body_mind_infogaphic/preview1.jpg"
-  - "six_steps_body_mind_infogaphic/preview2.jpg"
+  - "six-steps-infographic/preview1.jpg"
+  - "six-steps-infographic/preview2.jpg"
 imageAlt: "몸과 마음의 정화를 여섯 단계 수행 프로그램으로 정리한 인포그래픽"
 
 pageSize: "A4"

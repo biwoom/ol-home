@@ -10,13 +10,13 @@ version: "0.1.0"
 status: published
 date: 2026-06-04
 
-htmlPath: "lamrim-Infographic/lamrim-Infographic.html"
-pdfPath: "lamrim-Infographic/lamrim-Infographic.pdf"
-thumbnailPath: "lamrim-Infographic/thumb.jpg"
-imagePath: "lamrim-Infographic/preview1.jpg"
+htmlPath: "lamrim-infographic/lamrim-infographic.html"
+pdfPath: "lamrim-infographic/lamrim-infographic.pdf"
+thumbnailPath: "lamrim-infographic/thumb.jpg"
+imagePath: "lamrim-infographic/preview1.jpg"
 previewPaths:
-  - "lamrim-Infographic/preview1.jpg"
-  - "lamrim-Infographic/preview2.jpg"
+  - "lamrim-infographic/preview1.jpg"
+  - "lamrim-infographic/preview2.jpg"
 imageAlt: "람림 삼사도와 보리도차제론의 수행체계를 A4 지면에 정리한 인포그래픽"
 
 scriptureRef: "보리도차제광론, 보리도차제약론"
