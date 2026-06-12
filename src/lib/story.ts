@@ -55,8 +55,19 @@ export function getStoryGroupSlug(entry: StoryEntry): string {
   return entry.data.groupSlug ?? slugifyStorySegment(entry.data.group ?? STORY_DEFAULT_GROUP);
 }
 
+export function isStorySeriesIndex(entry: StoryEntry): boolean {
+  const segments = entry.id.split('/');
+  return segments.length === 1 || segments.at(-1) === 'index';
+}
+
+export function getStoryDocumentSlug(entry: StoryEntry): string {
+  return entry.id.split('/').at(-1) ?? slugifyStorySegment(entry.data.title);
+}
+
 export function getStoryEntryUrl(entry: StoryEntry): string {
-  return `/story/${getStorySeriesSlug(entry)}`;
+  const seriesSlug = getStorySeriesSlug(entry);
+  if (isStorySeriesIndex(entry)) return `/story/${seriesSlug}`;
+  return `/story/${seriesSlug}/${getStoryPartSlug(entry)}/${getStoryDocumentSlug(entry)}`;
 }
 
 export function storyAsset(entry: StoryEntry, asset?: string): string {

@@ -229,3 +229,40 @@
   overflow-wrap: anywhere;
 }
 
+.ol-story-part-overview {
+  display: grid;
+  gap: 10px;
+}
+
+.ol-story-part-overview a {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--ol-border);
+  border-radius: 12px;
+  background: var(--ol-surface-2);
+  color: var(--ol-ink-2);
+  text-decoration: none;
+}
+
+.ol-story-part-overview a:hover {
+  border-color: var(--ol-border-strong);
+  background: var(--ol-surface);
+  color: var(--ol-ink);
+}
+
+.ol-story-part-overview span,
+.ol-story-part-overview em {
+  color: var(--ol-muted);
+  font-family: var(--ol-font-mono);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.ol-story-part-overview strong {
+  font-size: 15px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}

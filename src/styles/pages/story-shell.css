@@ -57,3 +57,8 @@
   display: block;
 }
 
+@media (min-width: 981px) {
+  .ol-story-doc-page .ol-story-reader-shell {
+    overflow: visible;
+  }
+}

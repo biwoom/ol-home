@@ -5,7 +5,7 @@
 .ol-story-reader-page {
   width: min(1760px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 86px 0 120px;
+  padding: 20px 0 120px;
   overflow-x: hidden;
 }
 
@@ -30,3 +30,113 @@
   line-height: 1.7;
 }
 
+.ol-story-series-hero--left {
+  max-width: 1040px;
+  text-align: left;
+}
+
+.ol-story-series-hero--left p {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.ol-story-series-hero--left .ol-story-tag-row {
+  justify-content: flex-start;
+}
+
+.ol-story-doc-hero {
+  margin: 0 0 34px;
+  padding: 10px 0 18px;
+}
+
+.ol-story-doc-hero h1 {
+  max-width: 980px;
+  margin-top: 18px;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.ol-story-doc-hero p {
+  max-width: 760px;
+  margin-top: 18px;
+  color: var(--ol-muted);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.ol-story-part-nav {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 20px;
+  padding-bottom: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.ol-story-part-nav a {
+  flex: 0 0 auto;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--ol-border);
+  border-radius: 999px;
+  background: var(--ol-surface);
+  color: var(--ol-ink-2);
+  text-decoration: none;
+}
+
+.ol-story-part-nav a:hover {
+  border-color: var(--ol-border-strong);
+  color: var(--ol-ink);
+  box-shadow: var(--ol-shadow-sm);
+}
+
+.ol-story-part-nav a.active {
+  border-color: var(--ol-ink);
+  background: var(--ol-ink);
+  color: var(--ol-bg);
+  box-shadow: var(--ol-shadow-sm);
+}
+
+.ol-story-part-nav a.active span,
+.ol-story-part-nav a.active strong {
+  color: inherit;
+}
+
+.ol-story-part-nav span {
+  color: var(--ol-muted);
+  font-family: var(--ol-font-mono);
+  font-size: 11px;
+}
+
+.ol-story-part-nav strong {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (min-width: 981px) {
+  .ol-story-doc-page {
+    --ol-story-sticky-header: 64px;
+    --ol-story-sticky-nav: 58px;
+    overflow-x: visible;
+  }
+
+  .ol-story-doc-page .ol-story-part-nav {
+    position: sticky;
+    top: var(--ol-story-sticky-header);
+    z-index: 45;
+    margin: 0 0 20px;
+    padding: 10px 0;
+    background: color-mix(in oklab, var(--ol-bg) 94%, transparent);
+    backdrop-filter: saturate(140%) blur(8px);
+    border-bottom: 1px solid color-mix(in oklab, var(--ol-border) 72%, transparent);
+    scroll-snap-type: x proximity;
+  }
+
+  .ol-story-doc-page .ol-story-part-nav a {
+    scroll-snap-align: start;
+  }
+}

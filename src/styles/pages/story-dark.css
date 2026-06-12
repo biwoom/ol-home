@@ -25,8 +25,10 @@
 
 .dark .ol-story-tag-menu-panel button:hover,
 .dark .ol-story-tag-menu-panel button.active,
+.dark .ol-story-tag-result-list a:hover,
 .dark .ol-story-tag-result-list button:hover {
-  background: var(--ol-surface-3);
+  background: var(--ol-ink);
+  color: var(--ol-surface);
 }
 
 .dark .ol-story-mobile-info-panel {
@@ -63,6 +65,7 @@
 
 .dark .ol-story-part-sidebar a:hover,
 .dark .ol-story-part-sidebar button:hover,
+.dark .ol-story-part-sidebar a.active,
 .dark .ol-story-part-sidebar button.active {
   background: var(--ol-surface-3);
 }
@@ -75,4 +78,3 @@
   background: var(--ol-surface-3);
   color: var(--ol-ink);
 }
-

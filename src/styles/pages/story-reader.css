@@ -74,6 +74,7 @@
 
 .ol-story-part-sidebar a:hover,
 .ol-story-part-sidebar button:hover,
+.ol-story-part-sidebar a.active,
 .ol-story-part-sidebar button.active {
   background: var(--ol-surface);
   color: var(--ol-ink);
@@ -139,6 +140,7 @@
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 12px;
+  margin-bottom: 30px;
 }
 
 .ol-story-part-tools {
@@ -276,3 +278,11 @@
   margin-bottom: 50px;
 }
 
+@media (min-width: 981px) {
+  .ol-story-doc-page .ol-story-part-sidebar {
+    top: calc(var(--ol-story-sticky-header, 64px) + var(--ol-story-sticky-nav, 58px) + 18px);
+    height: calc(100vh - var(--ol-story-sticky-header, 64px) - var(--ol-story-sticky-nav, 58px) - 34px);
+    min-height: 0;
+    max-height: none;
+  }
+}

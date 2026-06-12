@@ -1,11 +1,19 @@
 @media (max-width: 980px) {
   .ol-story-reader-page {
     width: min(100% - 24px, 760px);
-    padding: 56px 0 84px;
+    padding: 20px 0 84px;
   }
 
   .ol-story-series-hero {
     margin-bottom: 42px;
+  }
+
+  .ol-story-series-hero--left {
+    text-align: left;
+  }
+
+  .ol-story-part-nav {
+    margin-top: -18px;
   }
 
   .ol-story-mobile-controls {
@@ -25,13 +33,14 @@
   }
 
   .ol-story-mobile-controls .ol-text-tool-btn {
-    min-height: 36px;
-    border-radius: 999px;
+    /* min-height: 36px; */
+    border-radius: 7px;
   }
 
+  .ol-story-mobile-chapters .ol-text-tool-btn,
   .ol-story-mobile-toc .ol-text-tool-btn,
   .ol-story-mobile-copy .ol-text-tool-btn {
-    width: 36px;
+    width: 40px;
     padding: 0;
   }
 
@@ -55,12 +64,44 @@
     transform: translateX(-50%);
   }
 
+  .ol-story-tag-area {
+    width: 100%;
+  }
+
   .ol-story-tag-row {
-    display: none;
+    flex-wrap: nowrap;
+    justify-content: center;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+
+  .ol-story-tag-menu {
+    position: static;
+  }
+
+  .ol-story-tag-menu-panel {
+    top: calc(100% + 8px);
+    left: 50%;
+    width: min(320px, calc(100vw - 24px));
+    max-height: min(58vh, 420px);
+    transform: translateX(-50%);
   }
 
   .ol-story-tag-results {
-    margin: -18px 0 18px;
+    top: calc(100% + 14px);
+    width: min(100vw - 24px, 860px);
+    max-height: min(70vh, 620px);
+    padding: 16px;
+  }
+
+  .ol-story-tag-results-head {
+    flex-direction: row;
+  }
+
+  .ol-story-tag-results-actions {
+    width: auto;
+    justify-content: flex-end;
   }
 
   .ol-story-tag-result-list {
@@ -94,6 +135,20 @@
 
   .ol-story-part-content-head {
     flex-direction: column;
+  }
+
+  .ol-story-doc-page .ol-story-part-content-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 14px;
+  }
+
+  .ol-story-doc-page .ol-story-mobile-controls {
+    justify-self: end;
+    justify-content: flex-end;
+    gap: 15px;
+    margin: 2px 0 0;
   }
 
   .ol-story-part-tools {
@@ -181,6 +236,11 @@
     aspect-ratio: 6 / 3;
   }
 
+  .ol-story-part-overview a {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
   .ol-story-book-cover strong {
     font-size: 28px;
   }
@@ -190,7 +250,7 @@
     width: 100%;
     margin: 0 auto;
   }
-
+  .ol-story-part-content-head h2 {display: none;}
   .ol-story-part-content-head h2,
   .ol-story-biblio-card-head h2,
   .ol-story-biblio-body h2 {

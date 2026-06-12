@@ -1,0 +1,388 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../../../../layouts/BaseLayout.astro';
+import { url } from '../../../../../lib/url';
+import {
+  buildStoryHierarchy,
+  formatStoryTag,
+  getStoryDocumentSlug,
+  getStoryEntryUrl,
+  getStoryPartSlug,
+  getStorySeriesSlug,
+  isStorySeriesIndex,
+} from '../../../../../lib/story';
+
+export async function getStaticPaths() {
+  const stories = await getCollection('story', e => e.data.published && !isStorySeriesIndex(e));
+  const allStories = await getCollection('story', e => e.data.published);
+  const seriesList = buildStoryHierarchy(allStories);
+
+  return stories.map(entry => ({
+    params: {
+      series: getStorySeriesSlug(entry),
+      part: getStoryPartSlug(entry),
+      doc: getStoryDocumentSlug(entry),
+    },
+    props: {
+      entry,
+      series: seriesList.find(item => item.slug === getStorySeriesSlug(entry)),
+    },
+  }));
+}
+
+const { entry, series } = Astro.props;
+const { Content } = await render(entry);
+const cover = series?.entries.find(isStorySeriesIndex) ?? series?.entries[0] ?? entry;
+const documentParts = (series?.parts ?? [])
+  .map(part => ({
+    ...part,
+    entries: part.entries.filter(item => !isStorySeriesIndex(item)),
+    groups: part.groups
+      .map(group => ({
+        ...group,
+        entries: group.entries.filter(item => !isStorySeriesIndex(item)),
+        count: group.entries.filter(item => !isStorySeriesIndex(item)).length,
+      }))
+      .filter(group => group.entries.length > 0),
+  }))
+  .filter(part => part.entries.length > 0);
+const currentPartSlug = getStoryPartSlug(entry);
+const currentPart = documentParts.find(part => part.slug === currentPartSlug);
+const linearEntries = documentParts.flatMap(part => part.entries.map(item => ({ entry: item, part })));
+const currentIndex = linearEntries.findIndex(item => item.entry.id === entry.id);
+const prevEntry = currentIndex > 0 ? linearEntries[currentIndex - 1]?.entry : undefined;
+const nextEntry = currentIndex >= 0 && currentIndex < linearEntries.length - 1
+  ? linearEntries[currentIndex + 1]?.entry
+  : undefined;
+const statusLabel: Record<string, string> = {
+  draft: '초고',
+  revising: '수정중',
+  ready: '완료',
+  published: '출판됨',
+};
+const statusKey = entry.data.status ?? 'draft';
+const currentUrl = url(getStoryEntryUrl(entry));
+---
+
+<BaseLayout
+  title={`${entry.data.title} — ${series?.label ?? entry.data.series ?? 'OL STORY'}`}
+  description={entry.data.description}
+>
+  <main class="ol-story-reader-page ol-story-doc-page">
+    <section class="ol-story-doc-hero">
+      <div class="ol-text-breadcrumb">
+        <a href={url('/story')}>STORY</a>
+        <span>/</span>
+        <a href={url(`/story/${getStorySeriesSlug(entry)}`)}>{series?.label ?? entry.data.series}</a>
+        {entry.data.part && (
+          <>
+            <span>/</span>
+            <span>{entry.data.part}</span>
+          </>
+        )}
+      </div>
+
+      <!-- <span class="ol-kicker">STORY DOCUMENT</span> -->
+      <h1 class="ol-kr">{entry.data.title}</h1>
+      {entry.data.description && <p class="ol-kr">{entry.data.description}</p>}
+    </section>
+
+    {documentParts.length > 0 && (
+      <nav class="ol-story-part-nav" aria-label={`${series?.label ?? 'STORY'} 파트 바로가기`}>
+        {documentParts.map((part, index) => {
+          const firstEntry = part.entries[0];
+          return (
+            <a href={url(getStoryEntryUrl(firstEntry))} class:list={{ active: part.slug === currentPartSlug }}>
+              <span>PART {index + 1}</span>
+              <strong class="ol-kr">{part.label}</strong>
+            </a>
+          );
+        })}
+      </nav>
+    )}
+
+    <section class="ol-story-reader-shell">
+      <div class="ol-story-part-layout">
+        <aside class="ol-story-part-sidebar" data-pagefind-ignore>
+          <div class="ol-story-part-sidebar-head">
+            <span>PART</span>
+            <strong class="ol-kr">{currentPart?.label ?? entry.data.part}</strong>
+          </div>
+          <nav aria-label={`${currentPart?.label ?? entry.data.part} 목차`}>
+            {currentPart?.groups.map(group => (
+              <section class="ol-story-sidebar-group">
+                <h3 class="ol-kr">{group.label}</h3>
+                {group.entries.map((item, itemIndex) => (
+                  <a href={url(getStoryEntryUrl(item))} class:list={{ active: item.id === entry.id }}>
+                    <span>{String(item.data.chapter ?? itemIndex + 1).padStart(2, '0')}</span>
+                    <strong class="ol-kr">{item.data.title}</strong>
+                  </a>
+                ))}
+              </section>
+            ))}
+          </nav>
+        </aside>
+
+        <article class="ol-story-part-content" data-pagefind-body>
+          <header class="ol-story-part-content-head">
+            <div>
+              <span class="ol-kicker">{currentPart?.label ?? entry.data.part} · CHAPTER {String(entry.data.chapter ?? 1).padStart(2, '0')}</span>
+              <h2 class="ol-kr">{entry.data.title}</h2>
+            </div>
+            <div class="ol-story-part-tools">
+              <div class="ol-text-toc-dropdown" data-story-toc-dropdown>
+                <button class="ol-text-tool-btn" type="button" aria-expanded="false">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <circle cx="4" cy="6" r="1"/>
+                    <circle cx="4" cy="12" r="1"/>
+                    <circle cx="4" cy="18" r="1"/>
+                  </svg>
+                  <span class="ol-text-tool-label">On this page</span>
+                </button>
+                <div class="ol-text-toc-panel">
+                  <ul data-story-toc-list></ul>
+                </div>
+              </div>
+
+              <div class="ol-copy-dropdown" data-copy-dropdown data-copy-url={currentUrl} data-copy-title={entry.data.title}>
+                <button class="ol-text-tool-btn" type="button" aria-expanded="false">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="9" y="9" width="11" height="11" rx="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  <span class="ol-text-tool-label">Copy</span>
+                </button>
+                <div class="ol-copy-panel">
+                  <button type="button" data-copy-kind="link">링크 복사</button>
+                  <button type="button" data-copy-kind="markdown">마크다운 복사</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="ol-story-mobile-controls" data-story-mobile-controls>
+              <div class="ol-story-mobile-chapters" data-story-mobile-chapters>
+                <button class="ol-text-tool-btn" type="button" aria-expanded="false">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                  </svg>
+                  <span class="sr-only">목록</span>
+                </button>
+                <div class="ol-story-mobile-chapters-panel">
+                  <div class="ol-story-mobile-info-links">
+                    {currentPart?.groups.map(group => (
+                      <>
+                        <h3 class="ol-kr">{group.label}</h3>
+                        {group.entries.map((item, itemIndex) => (
+                          <a href={url(getStoryEntryUrl(item))} class:list={{ active: item.id === entry.id }}>
+                            <span>{String(item.data.chapter ?? itemIndex + 1).padStart(2, '0')}</span>
+                            <strong class="ol-kr">{item.data.title}</strong>
+                          </a>
+                        ))}
+                      </>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div class="ol-story-mobile-toc" data-story-mobile-toc>
+                <button class="ol-text-tool-btn" type="button" aria-expanded="false">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <circle cx="4" cy="6" r="1"/>
+                    <circle cx="4" cy="12" r="1"/>
+                    <circle cx="4" cy="18" r="1"/>
+                  </svg>
+                  <span class="sr-only">On this page</span>
+                </button>
+                <div class="ol-story-mobile-toc-panel">
+                  <div class="ol-story-mobile-info-links ol-story-mobile-info-links--toc" data-mobile-story-toc></div>
+                </div>
+              </div>
+
+              <div class="ol-story-mobile-copy" data-story-mobile-copy>
+                <button class="ol-text-tool-btn" type="button" aria-expanded="false">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="9" y="9" width="11" height="11" rx="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  <span class="sr-only">Copy</span>
+                </button>
+                <div class="ol-story-mobile-copy-panel">
+                  <button type="button" data-copy-kind="link">링크 복사</button>
+                  <button type="button" data-copy-kind="markdown">마크다운 복사</button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div class="ol-story-active-doc-actions">
+            <div class="ol-text-doc-meta">
+              <span class={`ol-text-status ol-text-status--${statusKey}`}>{statusLabel[statusKey]}</span>
+              <span class="ol-mono-label">
+                {new Date(entry.data.publishedAt).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+          </div>
+
+          {entry.data.tags.length > 0 && (
+            <div class="ol-story-active-doc-tags">
+              {entry.data.tags.map(tag => {
+                const parsed = formatStoryTag(tag);
+                return (
+                  <span class="ol-text-tag" title={(entry.data.tagAliases[tag] ?? []).join(', ')}>
+                    <span>{parsed.prefix}</span>
+                    <strong>{parsed.label}</strong>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          <div class="ol-story-chapter active">
+            <div class="ol-prose ol-kr">
+              <Content />
+            </div>
+          </div>
+
+          {(prevEntry || nextEntry) && (
+            <nav class="ol-doc-nav" aria-label="이전 다음 문서">
+              {prevEntry ? (
+                <a class="ol-doc-nav-item ol-doc-nav-item--prev" href={url(getStoryEntryUrl(prevEntry))}>
+                  <span class="ol-doc-nav-kicker">이전 문서</span>
+                  <strong class="ol-kr">{prevEntry.data.title}</strong>
+                </a>
+              ) : <span class="ol-doc-nav-spacer" />}
+              {nextEntry ? (
+                <a class="ol-doc-nav-item ol-doc-nav-item--next" href={url(getStoryEntryUrl(nextEntry))}>
+                  <span class="ol-doc-nav-kicker">다음 문서</span>
+                  <strong class="ol-kr">{nextEntry.data.title}</strong>
+                </a>
+              ) : <span class="ol-doc-nav-spacer" />}
+            </nav>
+          )}
+        </article>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<script>
+  const normalizeMarkdown = (value: string) => value
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .trim();
+
+  const getStoryMarkdown = (title: string) => {
+    const source = document.querySelector<HTMLElement>('.ol-prose');
+    const body = normalizeMarkdown(source?.innerText ?? '');
+    return normalizeMarkdown(`# ${title}\n\n${body}`);
+  };
+
+  const renderToc = () => {
+    const headings = Array.from(document.querySelectorAll<HTMLHeadingElement>('.ol-prose h2, .ol-prose h3'));
+    const desktopList = document.querySelector<HTMLElement>('[data-story-toc-list]');
+    const mobileList = document.querySelector<HTMLElement>('[data-mobile-story-toc]');
+    const desktopDropdown = document.querySelector<HTMLElement>('[data-story-toc-dropdown]');
+    const mobileToc = document.querySelector<HTMLElement>('[data-story-mobile-toc]');
+    if (!desktopList || !mobileList) return;
+
+    desktopList.innerHTML = '';
+    mobileList.innerHTML = '';
+    if (headings.length === 0) {
+      if (desktopDropdown) desktopDropdown.style.display = 'none';
+      if (mobileToc) mobileToc.hidden = true;
+      return;
+    }
+
+    headings.forEach((heading, index) => {
+      if (!heading.id) heading.id = `story-heading-${index}`;
+      const desktopItem = document.createElement('li');
+      const desktopLink = document.createElement('a');
+      desktopLink.href = `#${heading.id}`;
+      desktopLink.textContent = heading.textContent ?? '';
+      desktopLink.dataset.level = heading.tagName === 'H3' ? '3' : '2';
+      desktopItem.appendChild(desktopLink);
+      desktopList.appendChild(desktopItem);
+
+      const mobileLink = document.createElement('a');
+      mobileLink.href = `#${heading.id}`;
+      mobileLink.dataset.level = desktopLink.dataset.level;
+      const meta = document.createElement('span');
+      meta.textContent = heading.tagName;
+      const label = document.createElement('strong');
+      label.textContent = heading.textContent ?? '';
+      mobileLink.append(meta, label);
+      mobileList.appendChild(mobileLink);
+    });
+  };
+
+  const closeMobilePanels = (except?: 'chapters' | 'toc' | 'copy') => {
+    if (except !== 'chapters') document.querySelector<HTMLButtonElement>('[data-story-mobile-chapters] > button')?.setAttribute('aria-expanded', 'false');
+    if (except !== 'toc') document.querySelector<HTMLButtonElement>('[data-story-mobile-toc] > button')?.setAttribute('aria-expanded', 'false');
+    if (except !== 'copy') document.querySelector<HTMLButtonElement>('[data-story-mobile-copy] > button')?.setAttribute('aria-expanded', 'false');
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-story-mobile-chapters], [data-story-mobile-toc], [data-story-mobile-copy]').forEach((dropdown) => {
+    const trigger = dropdown.querySelector<HTMLButtonElement>(':scope > button');
+    if (!trigger) return;
+    trigger.addEventListener('click', event => {
+      event.stopPropagation();
+      const kind = dropdown.hasAttribute('data-story-mobile-chapters')
+        ? 'chapters'
+        : dropdown.hasAttribute('data-story-mobile-toc')
+          ? 'toc'
+          : 'copy';
+      const open = trigger.getAttribute('aria-expanded') === 'true';
+      closeMobilePanels(kind);
+      trigger.setAttribute('aria-expanded', String(!open));
+    });
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-story-toc-dropdown], [data-copy-dropdown]').forEach(dropdown => {
+    const trigger = dropdown.querySelector<HTMLButtonElement>('button');
+    if (!trigger) return;
+    trigger.addEventListener('click', event => {
+      event.stopPropagation();
+      const open = trigger.getAttribute('aria-expanded') === 'true';
+      trigger.setAttribute('aria-expanded', String(!open));
+    });
+  });
+
+  document.addEventListener('click', async event => {
+    const copyButton = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-copy-kind]');
+    if (copyButton) {
+      event.stopPropagation();
+      const dropdown = copyButton.closest<HTMLElement>('[data-copy-dropdown]');
+      const title = dropdown?.dataset.copyTitle ?? document.title;
+      const href = new URL(dropdown?.dataset.copyUrl ?? window.location.pathname, window.location.origin).href;
+      const value = copyButton.dataset.copyKind === 'markdown' ? getStoryMarkdown(title) : href;
+      await navigator.clipboard?.writeText(value);
+      const original = copyButton.textContent ?? '';
+      copyButton.textContent = '복사됨';
+      dropdown?.querySelector<HTMLButtonElement>('button')?.setAttribute('aria-expanded', 'false');
+      window.setTimeout(() => { copyButton.textContent = original; }, 1200);
+      return;
+    }
+
+    document.querySelectorAll<HTMLButtonElement>('[data-story-toc-dropdown] button, [data-copy-dropdown] > button').forEach(button => {
+      button.setAttribute('aria-expanded', 'false');
+    });
+    closeMobilePanels();
+  });
+
+  renderToc();
+</script>

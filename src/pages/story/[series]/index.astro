@@ -1,8 +1,14 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { url } from '../../../lib/url';
-import { buildStoryHierarchy, getStorySeriesSlug, storyAsset, formatStoryTag } from '../../../lib/story';
+import {
+  buildStoryHierarchy,
+  formatStoryTag,
+  getStoryEntryUrl,
+  isStorySeriesIndex,
+  storyAsset,
+} from '../../../lib/story';
 
 export async function getStaticPaths() {
   const stories = await getCollection('story', e => e.data.published);
@@ -13,95 +19,37 @@ export async function getStaticPaths() {
 }
 
 const { series } = Astro.props;
-const cover = series.entries[0];
-const renderedParts = await Promise.all(series.parts.map(async part => ({
-  ...part,
-  renderedGroups: await Promise.all(part.groups.map(async group => ({
-    ...group,
-    renderedEntries: await Promise.all(group.entries.map(async entry => ({
-      entry,
-      Content: (await render(entry)).Content,
-    }))),
-  }))),
-})));
+const cover = series.entries.find(isStorySeriesIndex) ?? series.entries[0];
+const documentParts = series.parts
+  .map(part => ({
+    ...part,
+    entries: part.entries.filter(entry => !isStorySeriesIndex(entry)),
+    groups: part.groups
+      .map(group => ({
+        ...group,
+        entries: group.entries.filter(entry => !isStorySeriesIndex(entry)),
+        count: group.entries.filter(entry => !isStorySeriesIndex(entry)).length,
+      }))
+      .filter(group => group.entries.length > 0),
+  }))
+  .filter(part => part.entries.length > 0);
 
-const storyLinearEntries = renderedParts.flatMap((part, partIndex) =>
-  part.renderedGroups.flatMap(group =>
-    group.renderedEntries.map(({ entry }, entryIndex) => ({
-      partSlug: part.slug,
-      partLabel: part.label,
-      partIndex,
-      groupLabel: group.label,
-      entryId: entry.id,
-      title: entry.data.title,
-      chapter: entry.data.chapter ?? entryIndex + 1,
-    }))
-  )
-);
-const storyNavByEntry = new Map(storyLinearEntries.map((item, index) => [
-  item.entryId,
-  {
-    prev: index > 0 ? storyLinearEntries[index - 1] : undefined,
-    next: index < storyLinearEntries.length - 1 ? storyLinearEntries[index + 1] : undefined,
-  },
-]));
+const allDocuments = documentParts.flatMap(part => part.entries);
+const allTags = [...new Set(allDocuments.flatMap(entry => entry.data.tags))];
+const tagIndex = new Map<string, typeof allDocuments>();
 
-const allTags = [...new Set(series.entries.flatMap(entry => entry.data.tags))];
-const tagIndex = new Map<string, Array<{
-  partSlug: string;
-  partLabel: string;
-  partOrder: number;
-  groupLabel: string;
-  groupOrder: number;
-  entryId: string;
-  title: string;
-  chapter: number | undefined;
-}>>();
-
-for (const part of renderedParts) {
-  for (const group of part.groups) {
-    for (const entry of group.entries) {
-      for (const tag of entry.data.tags) {
-        const items = tagIndex.get(tag) ?? [];
-        items.push({
-          partSlug: part.slug,
-          partLabel: part.label,
-          partOrder: part.order,
-          groupLabel: group.label,
-          groupOrder: group.order,
-          entryId: entry.id,
-          title: entry.data.title,
-          chapter: entry.data.chapter,
-        });
-        tagIndex.set(tag, items);
-      }
-    }
+for (const entry of allDocuments) {
+  for (const tag of entry.data.tags) {
+    const items = tagIndex.get(tag) ?? [];
+    items.push(entry);
+    tagIndex.set(tag, items);
   }
 }
 
 const tagGroups = Array.from(tagIndex.entries())
-  .map(([tag, items]) => {
-    const parsed = formatStoryTag(tag);
-    return { tag, ...parsed, items };
-  })
+  .map(([tag, items]) => ({ tag, ...formatStoryTag(tag), items }))
   .sort((a, b) => a.prefix.localeCompare(b.prefix, 'ko') || a.label.localeCompare(b.label, 'ko'))
-  .reduce<Array<{
-    prefix: string;
-    tags: Array<{
-      tag: string;
-      label: string;
-      items: Array<{
-        partSlug: string;
-        partLabel: string;
-        partOrder: number;
-        groupLabel: string;
-        groupOrder: number;
-        entryId: string;
-        title: string;
-        chapter: number | undefined;
-      }>;
-    }>;
-  }>>((groups, tag) => {
+  .reduce<Array<{ prefix: string; tags: Array<{ tag: string; label: string; items: typeof allDocuments }> }>>((groups, tag) => {
     const group = groups.find(item => item.prefix === tag.prefix);
     const tagItem = { tag: tag.tag, label: tag.label, items: tag.items };
     if (group) group.tags.push(tagItem);
@@ -109,45 +57,6 @@ const tagGroups = Array.from(tagIndex.entries())
     return groups;
   }, []);
 
-const tagResultGroups = Array.from(tagIndex.entries())
-  .map(([tag, items]) => {
-    const parsed = formatStoryTag(tag);
-    const parts = Array.from(
-      items.reduce<Map<string, {
-        partSlug: string;
-        partLabel: string;
-        partOrder: number;
-        groups: Map<string, {
-          groupLabel: string;
-          groupOrder: number;
-          entries: typeof items;
-        }>;
-      }>>((partMap, item) => {
-        const part = partMap.get(item.partSlug) ?? {
-          partSlug: item.partSlug,
-          partLabel: item.partLabel,
-          partOrder: item.partOrder,
-          groups: new Map(),
-        };
-        const group = part.groups.get(item.groupLabel) ?? {
-          groupLabel: item.groupLabel,
-          groupOrder: item.groupOrder,
-          entries: [],
-        };
-        group.entries.push(item);
-        part.groups.set(item.groupLabel, group);
-        partMap.set(item.partSlug, part);
-        return partMap;
-      }, new Map()).values()
-    )
-      .sort((a, b) => a.partOrder - b.partOrder)
-      .map(part => ({
-        ...part,
-        groups: Array.from(part.groups.values()).sort((a, b) => a.groupOrder - b.groupOrder),
-      }));
-    return { tag, ...parsed, count: items.length, parts };
-  })
-  .sort((a, b) => a.prefix.localeCompare(b.prefix, 'ko') || a.label.localeCompare(b.label, 'ko'));
 const statusLabel: Record<string, string> = {
   draft: '초고',
   revising: '수정중',
@@ -156,7 +65,6 @@ const statusLabel: Record<string, string> = {
 };
 const statusKey = cover.data.status ?? 'draft';
 const htmlUrl = storyAsset(cover, cover.data.htmlAsset);
-const seriesUrl = url(`/story/${series.slug}`);
 ---
 
 <BaseLayout
@@ -164,204 +72,66 @@ const seriesUrl = url(`/story/${series.slug}`);
   description={cover.data.description}
 >
   <main class="ol-story-reader-page">
-    <section class="ol-story-series-hero">
+    <section class="ol-story-series-hero ol-story-series-hero--centered">
       <span class="ol-kicker">STORY SERIES</span>
       <h1 class="ol-kr">{series.label}</h1>
       {cover.data.description && <p class="ol-kr">{cover.data.description}</p>}
-      {tagGroups.length > 0 && (
-        <div class="ol-story-tag-row" data-story-tag-index>
-          {tagGroups.map(group => (
-            <div class="ol-story-tag-menu">
-              <button class="ol-story-tag-menu-trigger" type="button" aria-expanded="false" data-story-tag-menu-trigger>
-                <span>{group.prefix}</span>
-                <strong>{group.tags.length}</strong>
-              </button>
-              <div class="ol-story-tag-menu-panel">
-                {group.tags.map(tag => (
-                  <button type="button" data-story-tag-select={tag.tag} data-story-tag-label={tag.label}>
-                    <span>{tag.label}</span>
-                    <strong>{tag.items.length}</strong>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-
-    {series.entries.length > 0 && tagGroups.length > 0 && (
-      <section class="ol-story-tag-results" data-story-tag-results hidden>
-        <div class="ol-story-tag-results-head">
-          <div>
-            <span class="ol-kicker">Tag index</span>
-            <h2 class="ol-kr" data-story-tag-results-title>태그 문서</h2>
-            <p class="ol-story-tag-result-summary" data-story-tag-results-summary>
-              <em>선택한 태그를 모두 포함한 문서를 표시합니다.</em>
-              <strong data-story-tag-results-count>0개 문서</strong>
-            </p>
-          </div>
-          <button type="button" data-story-tag-results-clear>초기화</button>
-        </div>
-        <div class="ol-story-tag-selected" data-story-selected-tags></div>
-        <p class="ol-story-tag-result-empty ol-kr" data-story-tag-results-empty hidden>
-          선택한 태그 조합에 해당하는 문서가 없습니다.
-        </p>
-        <div class="ol-story-tag-result-panel" data-story-tag-result-panel>
-          <div class="ol-story-tag-result-list">
-            {renderedParts.map((part, partIndex) => (
-              <section data-story-result-part>
-                <h3>PART {partIndex + 1} · {part.label}</h3>
-                {part.groups.map(group => (
-                  <div class="ol-story-full-toc-group" data-story-result-group>
-                    <p>{group.label}</p>
-                    <ol>
-                      {group.entries.map((entry, entryIndex) => (
-                        <li data-story-result-entry data-tags={JSON.stringify(entry.data.tags)}>
-                          <button type="button" data-story-open-part={part.slug} data-story-entry-id={entry.id}>
-                            <span>{String(entry.data.chapter ?? entryIndex + 1).padStart(2, '0')}</span>
-                            <strong class="ol-kr">{entry.data.title}</strong>
-                          </button>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                ))}
-              </section>
-            ))}
-          </div>
-        </div>
-      </section>
-    )}
-
-    <div class="ol-story-mobile-controls" data-story-mobile-controls>
-      <div class="ol-story-mobile-chapters" data-story-mobile-chapters>
-        <button class="ol-text-tool-btn" type="button" aria-expanded="false">
-          <span>목록</span>
-        </button>
-        <div class="ol-story-mobile-chapters-panel">
-          <div class="ol-story-mobile-info-links" data-mobile-info-chapters></div>
-        </div>
-      </div>
 
       {tagGroups.length > 0 && (
-        <div class="ol-story-mobile-tags" data-story-mobile-tags>
-          <button class="ol-text-tool-btn" type="button" aria-expanded="false">
-            <span>태그</span>
-          </button>
-          <div class="ol-story-mobile-tags-panel">
+        <div class="ol-story-tag-area" data-story-tag-index>
+          <div class="ol-story-tag-row">
             {tagGroups.map(group => (
-              <section>
-                <h3>{group.prefix}</h3>
-                <div class="ol-story-mobile-info-links">
+              <div class="ol-story-tag-menu">
+                <button class="ol-story-tag-menu-trigger" type="button" aria-expanded="false" data-story-tag-menu-trigger>
+                  <span>{group.prefix}</span>
+                  <strong>{group.tags.length}</strong>
+                </button>
+                <div class="ol-story-tag-menu-panel">
                   {group.tags.map(tag => (
                     <button type="button" data-story-tag-select={tag.tag} data-story-tag-label={tag.label}>
-                      <span>{tag.items.length}</span>
-                      <strong>{tag.label}</strong>
+                      <span>{tag.label}</span>
+                      <strong>{tag.items.length}</strong>
                     </button>
                   ))}
                 </div>
-              </section>
+              </div>
             ))}
           </div>
-        </div>
-      )}
 
-      <div class="ol-story-mobile-toc" data-story-mobile-toc>
-        <button class="ol-text-tool-btn" type="button" aria-expanded="false">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <line x1="8" y1="6" x2="21" y2="6"/>
-            <line x1="8" y1="12" x2="21" y2="12"/>
-            <line x1="8" y1="18" x2="21" y2="18"/>
-            <circle cx="4" cy="6" r="1"/>
-            <circle cx="4" cy="12" r="1"/>
-            <circle cx="4" cy="18" r="1"/>
-          </svg>
-          <span class="sr-only">On this page</span>
-        </button>
-        <div class="ol-story-mobile-toc-panel">
-          <div class="ol-story-mobile-info-links ol-story-mobile-info-links--toc" data-mobile-story-toc></div>
-        </div>
-      </div>
-
-      <div class="ol-story-mobile-copy" data-story-mobile-copy data-series-title={series.label} data-series-url={seriesUrl}>
-        <button class="ol-text-tool-btn" type="button" aria-expanded="false">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <rect x="9" y="9" width="11" height="11" rx="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-          <span class="sr-only">Copy</span>
-        </button>
-        <div class="ol-story-mobile-copy-panel">
-          <button type="button" data-mobile-copy-kind="link">링크 복사</button>
-          <button type="button" data-mobile-copy-kind="markdown">마크다운 복사</button>
-        </div>
-      </div>
-    </div>
-
-    <section class="ol-story-reader-shell" data-story-reader>
-      <div class="ol-story-reader-tabs" role="tablist" aria-label={`${series.label} 탭`}>
-        <button class="ol-story-tab active" type="button" role="tab" aria-selected="true" data-story-tab="bibliography">
-          서지정보
-        </button>
-        {renderedParts.map((part, index) => (
-          <button
-            class="ol-story-tab"
-            type="button"
-            role="tab"
-            aria-selected="false"
-            data-story-tab={part.slug}
-          >
-            PART {index + 1}
-          </button>
-        ))}
-      </div>
-
-      <div class="ol-story-reader-panel active" data-story-panel="bibliography">
-        <div class="ol-story-biblio-grid">
-          <section class="ol-story-cover-panel">
-            <div class="ol-story-book-cover">
-              <span>OL STORY</span>
-              <strong class="ol-kr">{series.label}</strong>
-              <em>{cover.data.version}</em>
-            </div>
-            <!-- <div class="ol-story-downloads">
-              <a class="ol-btn ol-btn-primary ol-btn-sm" href={url(htmlUrl)} target="_blank" rel="noopener noreferrer">
-                웹에서 읽기
-              </a>
-              <a class="ol-btn ol-btn-outline ol-btn-sm" href={url(htmlUrl)} download={`${series.label}-${cover.data.version}.html`}>
-                HTML 내려받기
-              </a>
-            </div> -->
-          </section>
-
-          <section class="ol-story-biblio-toc-card" data-story-mobile-collapsible data-mobile-collapsed="true">
-            <div class="ol-story-biblio-card-head">
+          <section class="ol-story-tag-results" data-story-tag-results hidden>
+            <div class="ol-story-tag-results-head">
               <div>
-                <span class="ol-kicker">Contents</span>
-                <h2 class="ol-kr">문서목록</h2>
+                <span class="ol-kicker">Tag index</span>
+                <h2 class="ol-kr" data-story-tag-results-title>태그 문서</h2>
+                <p class="ol-story-tag-result-summary" data-story-tag-results-summary>
+                  <em>선택한 태그를 모두 포함한 문서를 표시합니다.</em>
+                  <strong data-story-tag-results-count>0개 문서</strong>
+                </p>
               </div>
-              <button class="ol-story-biblio-toggle" type="button" aria-expanded="false" aria-label="문서목록 펼치기" data-story-biblio-toggle>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </button>
+              <div class="ol-story-tag-results-actions">
+                <button type="button" data-story-tag-results-clear>초기화</button>
+                <button type="button" data-story-tag-results-close>닫기</button>
+              </div>
             </div>
-            <div class="ol-story-biblio-card-content">
-              <div class="ol-story-full-toc">
-                {renderedParts.map((part, partIndex) => (
-                  <section>
+            <div class="ol-story-tag-selected" data-story-selected-tags></div>
+            <p class="ol-story-tag-result-empty ol-kr" data-story-tag-results-empty hidden>
+              선택한 태그 조합에 해당하는 문서가 없습니다.
+            </p>
+            <div class="ol-story-tag-result-panel" data-story-tag-result-panel>
+              <div class="ol-story-tag-result-list">
+                {documentParts.map((part, partIndex) => (
+                  <section data-story-result-part>
                     <h3>PART {partIndex + 1} · {part.label}</h3>
                     {part.groups.map(group => (
-                      <div class="ol-story-full-toc-group">
+                      <div class="ol-story-full-toc-group" data-story-result-group>
                         <p>{group.label}</p>
                         <ol>
                           {group.entries.map((entry, entryIndex) => (
-                            <li>
-                              <button type="button" data-story-open-part={part.slug} data-story-entry-id={entry.id}>
+                            <li data-story-result-entry data-tags={JSON.stringify(entry.data.tags)}>
+                              <a href={url(getStoryEntryUrl(entry))}>
                                 <span>{String(entry.data.chapter ?? entryIndex + 1).padStart(2, '0')}</span>
                                 <strong class="ol-kr">{entry.data.title}</strong>
-                              </button>
+                              </a>
                             </li>
                           ))}
                         </ol>
@@ -372,513 +142,128 @@ const seriesUrl = url(`/story/${series.slug}`);
               </div>
             </div>
           </section>
-
-          <section class="ol-story-biblio-body" data-story-mobile-collapsible data-mobile-collapsed="true">
-            <div class="ol-story-biblio-card-head">
-              <div>
-                <span class="ol-kicker">Metadata</span>
-                <h2 class="ol-kr">서지정보</h2>
-              </div>
-              <button class="ol-story-biblio-toggle" type="button" aria-expanded="false" aria-label="서지정보 펼치기" data-story-biblio-toggle>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </button>
-            </div>
-
-            <div class="ol-story-biblio-card-content">
-              <div class="ol-story-biblio-head">
-                <span class={`ol-text-status ol-text-status--${statusKey}`}>{statusLabel[statusKey]}</span>
-                <span class="ol-mono-label">{new Date(cover.data.publishedAt).toLocaleDateString('ko-KR')}</span>
-              </div>
-
-              <dl class="ol-story-biblio-list">
-                <div><dt>제목</dt><dd>{series.label}</dd></div>
-                {cover.data.subtitle && <div><dt>부제</dt><dd>{cover.data.subtitle}</dd></div>}
-                <div><dt>분류</dt><dd>{cover.data.category ?? 'STORY'}</dd></div>
-                <div><dt>버전</dt><dd>{cover.data.version}</dd></div>
-                <div><dt>언어</dt><dd>{cover.data.lang}</dd></div>
-                <div><dt>라이선스</dt><dd>{cover.data.license}</dd></div>
-                {cover.data.rightsHolder && <div><dt>권리자</dt><dd>{cover.data.rightsHolder}</dd></div>}
-              </dl>
-
-              {cover.data.description && (
-                <div class="ol-story-summary">
-                  <h3 class="ol-kr">내용 요약</h3>
-                  <p class="ol-kr">{cover.data.description}</p>
-                </div>
-              )}
-            </div>
-          </section>
         </div>
-      </div>
+      )}
+    </section>
 
-      {renderedParts.map((part, partIndex) => (
-        <div class="ol-story-reader-panel" data-story-panel={part.slug}>
-          <div class="ol-story-part-layout">
-            <aside class="ol-story-part-sidebar" data-pagefind-ignore>
-              <div class="ol-story-part-sidebar-head">
-                <span>PART {partIndex + 1}</span>
-                <strong class="ol-kr">{part.label}</strong>
-              </div>
-              <nav aria-label={`${part.label} 목차`}>
-                {part.groups.map(group => (
-                  <section class="ol-story-sidebar-group">
-                    <h3 class="ol-kr">{group.label}</h3>
-                    {group.entries.map((entry, entryIndex) => (
-                      <button type="button" data-story-select-entry={entry.id} data-story-part={part.slug}>
-                        <span>{String(entry.data.chapter ?? entryIndex + 1).padStart(2, '0')}</span>
-                        <strong class="ol-kr">{entry.data.title}</strong>
-                      </button>
-                    ))}
-                  </section>
-                ))}
-              </nav>
-            </aside>
+    {documentParts.length > 0 && (
+      <nav class="ol-story-part-nav" aria-label={`${series.label} 파트 바로가기`}>
+        {documentParts.map((part, index) => {
+          const firstEntry = part.entries[0];
+          return (
+            <a href={url(getStoryEntryUrl(firstEntry))}>
+              <span>PART {index + 1}</span>
+              <strong class="ol-kr">{part.label}</strong>
+            </a>
+          );
+        })}
+      </nav>
+    )}
 
-            <article class="ol-story-part-content">
-              <header class="ol-story-part-content-head">
-                <div>
-                  <span class="ol-kicker">PART {partIndex + 1}</span>
-                  <h2 class="ol-kr">{part.label}</h2>
-                  <div class="ol-story-active-doc-meta-list">
-                    {part.groups.flatMap(group => group.entries.map(entry => (
-                      <div class="ol-story-active-doc-meta" data-story-head-entry={entry.id} hidden={entry.id !== part.entries[0]?.id}>
-                        {/* <h3 class="ol-kr">{entry.data.title}</h3> */}
-                        <div class="ol-story-active-doc-actions">
-                          <div class="ol-text-doc-meta">
-                            <span class={`ol-text-status ol-text-status--${entry.data.status ?? 'draft'}`}>
-                              {statusLabel[entry.data.status ?? 'draft']}
-                            </span>
-                            <span class="ol-mono-label">
-                              {new Date(entry.data.publishedAt).toLocaleDateString('ko-KR', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                        {entry.data.tags.length > 0 && (
-                          <div class="ol-story-active-doc-tags">
-                            {entry.data.tags.map(tag => {
-                              const parsed = formatStoryTag(tag);
-                              return (
-                                <span class="ol-text-tag" title={(entry.data.tagAliases[tag] ?? []).join(', ')}>
-                                  <span>{parsed.prefix}</span>
-                                  <strong>{parsed.label}</strong>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )))}
-                  </div>
-                </div>
-                <div class="ol-story-part-tools">
-                  <div class="ol-story-chapters-dropdown">
-                    <button class="ol-text-tool-btn" type="button" aria-expanded="false">
-                      Chapters
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"/>
-                      </svg>
-                    </button>
-                    <div class="ol-story-chapters-panel">
-                      {part.groups.map(group => (
-                        <section>
-                          <h3 class="ol-kr">{group.label}</h3>
-                          {group.entries.map((entry, entryIndex) => (
-                            <button type="button" data-story-select-entry={entry.id} data-story-part={part.slug}>
-                              <span>{String(entry.data.chapter ?? entryIndex + 1).padStart(2, '0')}</span>
-                              <strong class="ol-kr">{entry.data.title}</strong>
-                            </button>
-                          ))}
-                        </section>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div class="ol-text-toc-dropdown" data-story-toc-dropdown>
-                    <button class="ol-text-tool-btn" type="button" aria-expanded="false">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <line x1="8" y1="6" x2="21" y2="6"/>
-                        <line x1="8" y1="12" x2="21" y2="12"/>
-                        <line x1="8" y1="18" x2="21" y2="18"/>
-                        <circle cx="4" cy="6" r="1"/>
-                        <circle cx="4" cy="12" r="1"/>
-                        <circle cx="4" cy="18" r="1"/>
-                      </svg>
-                      <span class="ol-text-tool-label">On this page</span>
-                    </button>
-                    <div class="ol-text-toc-panel">
-                      <ul data-story-toc-list></ul>
-                    </div>
-                  </div>
-
-                  <div class="ol-copy-dropdown" data-copy-dropdown data-copy-url={seriesUrl} data-copy-title={series.label}>
-                    <button class="ol-text-tool-btn" type="button" aria-expanded="false">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <rect x="9" y="9" width="11" height="11" rx="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                      </svg>
-                      <span class="ol-text-tool-label">Copy</span>
-                    </button>
-                    <div class="ol-copy-panel">
-                      <button type="button" data-copy-kind="link">링크 복사</button>
-                      <button type="button" data-copy-kind="markdown">마크다운 복사</button>
-                    </div>
-                  </div>
-                </div>
-              </header>
-
-              <div class="ol-story-chapter-stack ol-kr" data-story-part-panel={part.slug}>
-                {part.renderedGroups.map(group => (
-                  <section class="ol-story-content-group" data-story-group={group.label}>
-                    {group.renderedEntries.map(({ entry, Content }, entryIndex) => {
-                      const nav = storyNavByEntry.get(entry.id);
-                      return (
-                        <section
-                          id={`story-${entry.id.replace(/[^\w-]/g, '-')}`}
-                          class="ol-story-chapter"
-                          data-story-entry={entry.id}
-                          data-story-part={part.slug}
-                        >
-                          <h3 class="ol-story-content-group-title">{group.label}</h3>
-                          <div class="ol-story-chapter-kicker">
-                            CHAPTER {String(entry.data.chapter ?? entryIndex + 1).padStart(2, '0')}
-                          </div>
-                          <h4>{entry.data.title}</h4>
-                          {entry.data.description && <p class="ol-story-chapter-desc">{entry.data.description}</p>}
-                          <div class="ol-prose ol-kr">
-                            <Content />
-                          </div>
-
-                          {(nav?.prev || nav?.next) && (
-                            <nav class="ol-doc-nav" aria-label="이전 다음 문서">
-                              {nav.prev ? (
-                                <button
-                                  class="ol-doc-nav-item ol-doc-nav-item--prev"
-                                  type="button"
-                                  data-story-nav-entry={nav.prev.entryId}
-                                  data-story-nav-part={nav.prev.partSlug}
-                                >
-                                  <span class="ol-doc-nav-kicker">이전 문서</span>
-                                  <strong class="ol-kr">{nav.prev.title}</strong>
-                                </button>
-                              ) : <span class="ol-doc-nav-spacer" />}
-                              {nav.next ? (
-                                <button
-                                  class="ol-doc-nav-item ol-doc-nav-item--next"
-                                  type="button"
-                                  data-story-nav-entry={nav.next.entryId}
-                                  data-story-nav-part={nav.next.partSlug}
-                                >
-                                  <span class="ol-doc-nav-kicker">다음 문서</span>
-                                  <strong class="ol-kr">{nav.next.title}</strong>
-                                </button>
-                              ) : <span class="ol-doc-nav-spacer" />}
-                            </nav>
-                          )}
-                        </section>
-                      );
-                    })}
-                  </section>
-                ))}
-              </div>
-            </article>
+    <section class="ol-story-reader-shell">
+      <div class="ol-story-biblio-grid">
+        <section class="ol-story-cover-panel">
+          <div class="ol-story-book-cover">
+            <span>OL STORY</span>
+            <strong class="ol-kr">{series.label}</strong>
+            <em>{cover.data.version}</em>
           </div>
-        </div>
-      ))}
+          <!-- {htmlUrl && (
+            <div class="ol-story-downloads">
+              <a class="ol-btn ol-btn-outline ol-btn-sm" href={url(htmlUrl)} target="_blank" rel="noopener noreferrer">
+                원본 HTML
+              </a>
+            </div>
+          )} -->
+        </section>
+
+        <section class="ol-story-biblio-toc-card" data-story-mobile-collapsible data-mobile-collapsed="true">
+          <div class="ol-story-biblio-card-head">
+            <div>
+              <span class="ol-kicker">Contents</span>
+              <h2 class="ol-kr">파트 목록</h2>
+            </div>
+            <button class="ol-story-biblio-toggle" type="button" aria-expanded="false" aria-label="파트 목록 펼치기" data-story-biblio-toggle>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+          </div>
+          <div class="ol-story-biblio-card-content">
+            <div class="ol-story-part-overview">
+              {documentParts.map((part, partIndex) => {
+                const firstEntry = part.entries[0];
+                return (
+                  <a href={url(getStoryEntryUrl(firstEntry))}>
+                    <span>PART {partIndex + 1}</span>
+                    <strong class="ol-kr">{part.label}</strong>
+                    <em>{part.entries.length}개 문서</em>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section class="ol-story-biblio-body" data-story-mobile-collapsible data-mobile-collapsed="true">
+          <div class="ol-story-biblio-card-head">
+            <div>
+              <span class="ol-kicker">Metadata</span>
+              <h2 class="ol-kr">서지정보</h2>
+            </div>
+            <button class="ol-story-biblio-toggle" type="button" aria-expanded="false" aria-label="서지정보 펼치기" data-story-biblio-toggle>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="ol-story-biblio-card-content">
+            <div class="ol-story-biblio-head">
+              <span class={`ol-text-status ol-text-status--${statusKey}`}>{statusLabel[statusKey]}</span>
+              <span class="ol-mono-label">{new Date(cover.data.publishedAt).toLocaleDateString('ko-KR')}</span>
+            </div>
+
+            <dl class="ol-story-biblio-list">
+              <div><dt>제목</dt><dd>{series.label}</dd></div>
+              {cover.data.subtitle && <div><dt>부제</dt><dd>{cover.data.subtitle}</dd></div>}
+              <div><dt>분류</dt><dd>{cover.data.category ?? 'STORY'}</dd></div>
+              <div><dt>문서 수</dt><dd>{allDocuments.length}개</dd></div>
+              <div><dt>버전</dt><dd>{cover.data.version}</dd></div>
+              <div><dt>언어</dt><dd>{cover.data.lang}</dd></div>
+              <div><dt>라이선스</dt><dd>{cover.data.license}</dd></div>
+              {cover.data.rightsHolder && <div><dt>권리자</dt><dd>{cover.data.rightsHolder}</dd></div>}
+            </dl>
+
+            {cover.data.description && (
+              <div class="ol-story-summary">
+                <h3 class="ol-kr">내용 요약</h3>
+                <p class="ol-kr">{cover.data.description}</p>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
     </section>
   </main>
 </BaseLayout>
 
 <script>
-  const reader = document.querySelector<HTMLElement>('[data-story-reader]');
-  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-story-tab]'));
-  const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-story-panel]'));
-
-  const normalizeMarkdown = (value: string) => value
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/[ \t]+\n/g, '\n')
-    .trim();
-
-  const escapeMarkdown = (value: string) => value.replace(/([\\`*_{}\[\]()#+\-.!>])/g, '\\$1');
-
-  const inlineMarkdown = (node: Node): string => {
-    if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
-    if (!(node instanceof HTMLElement)) return '';
-
-    if (node.tagName === 'BR') return '  \n';
-    if (node.tagName === 'CODE' && node.parentElement?.tagName !== 'PRE') return `\`${node.textContent ?? ''}\``;
-    if (node.tagName === 'STRONG' || node.tagName === 'B') return `**${Array.from(node.childNodes).map(inlineMarkdown).join('')}**`;
-    if (node.tagName === 'EM' || node.tagName === 'I') return `*${Array.from(node.childNodes).map(inlineMarkdown).join('')}*`;
-    if (node.tagName === 'A') {
-      const label = normalizeMarkdown(Array.from(node.childNodes).map(inlineMarkdown).join('')) || node.textContent || node.getAttribute('href') || '';
-      const href = node.getAttribute('href') || '';
-      return href ? `[${label}](${href})` : label;
-    }
-    if (node.tagName === 'IMG') {
-      const alt = node.getAttribute('alt') || '';
-      const src = node.getAttribute('src') || '';
-      return src ? `![${alt}](${src})` : '';
-    }
-
-    return Array.from(node.childNodes).map(inlineMarkdown).join('');
-  };
-
-  const blockMarkdown = (node: Node, depth = 0): string => {
-    if (node.nodeType === Node.TEXT_NODE) return normalizeMarkdown(node.textContent ?? '');
-    if (!(node instanceof HTMLElement)) return '';
-
-    if (node.matches('script, style, button')) return '';
-    if (node.tagName === 'PRE') {
-      const code = node.textContent?.replace(/\n$/, '') ?? '';
-      return `\`\`\`\n${code}\n\`\`\``;
-    }
-
-    if (/^H[1-6]$/.test(node.tagName)) {
-      const level = Number(node.tagName[1]);
-      return `${'#'.repeat(level)} ${normalizeMarkdown(Array.from(node.childNodes).map(inlineMarkdown).join(''))}`;
-    }
-
-    if (node.tagName === 'P') return normalizeMarkdown(Array.from(node.childNodes).map(inlineMarkdown).join(''));
-    if (node.tagName === 'BLOCKQUOTE') {
-      return normalizeMarkdown(Array.from(node.childNodes).map(child => blockMarkdown(child, depth)).join('\n\n'))
-        .split('\n')
-        .map(line => line ? `> ${line}` : '>')
-        .join('\n');
-    }
-
-    if (node.tagName === 'UL' || node.tagName === 'OL') {
-      return Array.from(node.children)
-        .filter(child => child.tagName === 'LI')
-        .map((child, index) => {
-          const marker = node.tagName === 'OL' ? `${index + 1}. ` : '- ';
-          const content = normalizeMarkdown(Array.from(child.childNodes).map(liChild => {
-            if (liChild instanceof HTMLElement && (liChild.tagName === 'UL' || liChild.tagName === 'OL')) {
-              return `\n${blockMarkdown(liChild, depth + 1)}`;
-            }
-            return liChild instanceof HTMLElement ? blockMarkdown(liChild, depth + 1) : inlineMarkdown(liChild);
-          }).join(''));
-          return `${'  '.repeat(depth)}${marker}${content.replace(/\n/g, `\n${'  '.repeat(depth + 1)}`)}`;
-        })
-        .join('\n');
-    }
-
-    if (node.tagName === 'HR') return '---';
-
-    const markdown = Array.from(node.childNodes)
-      .map(child => child instanceof HTMLElement ? blockMarkdown(child, depth) : inlineMarkdown(child))
-      .filter(Boolean)
-      .join('\n\n');
-
-    return normalizeMarkdown(markdown);
-  };
-
-  const getActiveStoryMarkdown = (title: string) => {
-    const activePanel = document.querySelector<HTMLElement>('.ol-story-reader-panel.active');
-    const source = activePanel?.querySelector<HTMLElement>('.ol-story-chapter.active .ol-prose, .ol-story-biblio-body');
-    if (!source) return `# ${escapeMarkdown(title)}`;
-    const body = Array.from(source.childNodes)
-      .map(child => blockMarkdown(child))
-      .filter(Boolean)
-      .join('\n\n');
-    return normalizeMarkdown(`# ${escapeMarkdown(title)}\n\n${body}`);
-  };
-
-  const storyChapters = document.querySelector<HTMLElement>('[data-story-mobile-chapters]');
-  const storyChaptersTrigger = storyChapters?.querySelector<HTMLButtonElement>('.ol-text-tool-btn');
-  const storyChaptersPanel = storyChapters?.querySelector<HTMLElement>('.ol-story-mobile-chapters-panel');
-  const storyChaptersList = storyChapters?.querySelector<HTMLElement>('[data-mobile-info-chapters]');
-  const storyMobileTags = document.querySelector<HTMLElement>('[data-story-mobile-tags]');
-  const storyMobileTagsTrigger = storyMobileTags?.querySelector<HTMLButtonElement>('.ol-text-tool-btn');
-  const storyMobileTagsPanel = storyMobileTags?.querySelector<HTMLElement>('.ol-story-mobile-tags-panel');
-  const storyMobileToc = document.querySelector<HTMLElement>('[data-story-mobile-toc]');
-  const storyMobileTocTrigger = storyMobileToc?.querySelector<HTMLButtonElement>('.ol-text-tool-btn');
-  const storyMobileTocPanel = storyMobileToc?.querySelector<HTMLElement>('.ol-story-mobile-toc-panel');
-  const storyMobileTocList = storyMobileToc?.querySelector<HTMLElement>('[data-mobile-story-toc]');
-  const storyMobileCopy = document.querySelector<HTMLElement>('[data-story-mobile-copy]');
-  const storyMobileCopyTrigger = storyMobileCopy?.querySelector<HTMLButtonElement>('.ol-text-tool-btn');
-  const storyMobileCopyPanel = storyMobileCopy?.querySelector<HTMLElement>('.ol-story-mobile-copy-panel');
-  const selectedEntryByPart = new Map<string, string>();
-
-  const getPartPanel = (partSlug: string) => document.querySelector<HTMLElement>(`[data-story-part-panel="${partSlug}"]`);
-  const getActivePartSlug = () => document.querySelector<HTMLElement>('.ol-story-reader-panel.active')?.dataset.storyPanel ?? 'bibliography';
-  const getSelectedEntryId = (partSlug: string) => {
-    if (selectedEntryByPart.has(partSlug)) return selectedEntryByPart.get(partSlug);
-    const firstEntry = getPartPanel(partSlug)?.querySelector<HTMLElement>('[data-story-entry]')?.dataset.storyEntry;
-    if (firstEntry) selectedEntryByPart.set(partSlug, firstEntry);
-    return firstEntry;
-  };
-
-  const renderPartEntry = (partSlug: string) => {
-    const panel = getPartPanel(partSlug);
-    if (!panel) return;
-    const selectedEntryId = getSelectedEntryId(partSlug);
-    panel.querySelectorAll<HTMLElement>('[data-story-entry]').forEach(entry => {
-      const active = entry.dataset.storyEntry === selectedEntryId;
-      entry.classList.toggle('active', active);
-    });
-    document.querySelectorAll<HTMLElement>(`.ol-story-reader-panel[data-story-panel="${partSlug}"] [data-story-head-entry]`).forEach(entry => {
-      entry.toggleAttribute('hidden', entry.dataset.storyHeadEntry !== selectedEntryId);
-    });
-    panel.querySelectorAll<HTMLElement>('[data-story-group]').forEach(group => {
-      const hasActive = Boolean(group.querySelector('[data-story-entry].active'));
-      group.toggleAttribute('hidden', !hasActive);
-    });
-    document.querySelectorAll<HTMLElement>(`[data-story-part="${partSlug}"][data-story-select-entry]`).forEach(button => {
-      button.classList.toggle('active', button.getAttribute('data-story-select-entry') === selectedEntryId);
-    });
-  };
-
-  const renderPartToc = (partSlug: string) => {
-    const panel = document.querySelector<HTMLElement>(`.ol-story-reader-panel[data-story-panel="${partSlug}"]`);
-    if (!panel) return;
-    const selectedEntryId = getSelectedEntryId(partSlug);
-    const activeEntry = panel.querySelector<HTMLElement>(`[data-story-entry="${selectedEntryId}"]`);
-    const headings = Array.from(activeEntry?.querySelectorAll<HTMLHeadingElement>('.ol-story-content-group-title, .ol-story-chapter h4, .ol-prose h2, .ol-prose h3') ?? []);
-    const dropdown = panel.querySelector<HTMLElement>('[data-story-toc-dropdown]');
-    const list = panel.querySelector<HTMLElement>('[data-story-toc-list]');
-    const trigger = dropdown?.querySelector<HTMLButtonElement>('button');
-    if (!dropdown || !list || !trigger) return;
-
-    list.innerHTML = '';
-    if (headings.length === 0) {
-      dropdown.style.display = 'none';
-      return;
-    }
-
-    dropdown.style.display = '';
-    headings.forEach((heading, index) => {
-      if (!heading.id) heading.id = `${partSlug}-${selectedEntryId?.replace(/[^\w-]/g, '-')}-heading-${index}`;
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = `#${heading.id}`;
-      a.textContent = heading.textContent ?? '';
-      a.dataset.level =
-        heading.classList.contains('ol-story-content-group-title') || heading.tagName === 'H2'
-          ? '2'
-          : '3';
-      li.appendChild(a);
-      list.appendChild(li);
-    });
-  };
-
-  const selectStoryEntry = (partSlug: string, entryId: string) => {
-    selectedEntryByPart.set(partSlug, entryId);
-    renderPartEntry(partSlug);
-    renderPartToc(partSlug);
-    if (getActivePartSlug() === partSlug) renderStoryMobileInfo();
-  };
-
-  const createStoryInfoLink = (options: { href: string; label: string; meta?: string; level?: string; partSlug?: string; kind: 'chapter' | 'toc' }) => {
-    const link = document.createElement(options.kind === 'chapter' ? 'button' : 'a');
-    if (options.kind === 'chapter') {
-      (link as HTMLButtonElement).type = 'button';
-      link.setAttribute('data-story-select-entry', options.href);
-      link.setAttribute('data-story-part', options.partSlug ?? getActivePartSlug());
-    } else {
-      (link as HTMLAnchorElement).href = options.href;
-    }
-    link.dataset.kind = options.kind;
-    if (options.level) link.dataset.level = options.level;
-
-    if (options.kind === 'chapter') {
-      const meta = document.createElement('span');
-      meta.textContent = options.meta ?? '';
-      const label = document.createElement('strong');
-      label.textContent = options.label;
-      link.append(meta, label);
-      return link;
-    }
-
-    const meta = document.createElement('span');
-    meta.textContent = options.level === '3' ? 'H3' : 'H2';
-    const label = document.createElement('strong');
-    label.textContent = options.label;
-    link.append(meta, label);
-    return link;
-  };
-
-  const renderStoryMobileInfo = () => {
-    if (!storyMobileToc || !storyMobileTocList || !storyChapters || !storyChaptersList) return;
-    const activePanel = document.querySelector<HTMLElement>('.ol-story-reader-panel.active');
-    const activePartSlug = activePanel?.dataset.storyPanel ?? 'bibliography';
-    const chapterPartSlug = activePartSlug === 'bibliography'
-      ? tabs.find(tab => tab.dataset.storyTab && tab.dataset.storyTab !== 'bibliography')?.dataset.storyTab
-      : activePartSlug;
-    const chapterPanel = chapterPartSlug
-      ? document.querySelector<HTMLElement>(`.ol-story-reader-panel[data-story-panel="${chapterPartSlug}"]`)
-      : null;
-    const chapters = Array.from(chapterPanel?.querySelectorAll<HTMLElement>('.ol-story-chapters-panel [data-story-select-entry]') ?? []);
-    const toc = Array.from(activePanel?.querySelectorAll<HTMLAnchorElement>('[data-story-toc-list] a') ?? []);
-    const bibliography = activePartSlug === 'bibliography';
-
-    storyChapters.hidden = chapters.length === 0;
-    storyChaptersList.innerHTML = '';
-    chapters.forEach(link => {
-      const meta = link.querySelector('span')?.textContent?.trim() ?? '';
-      const label = link.querySelector('strong')?.textContent?.trim() ?? link.textContent?.trim() ?? '';
-      storyChaptersList.appendChild(createStoryInfoLink({
-        href: link.getAttribute('data-story-select-entry') ?? '',
-        partSlug: link.getAttribute('data-story-part') ?? chapterPartSlug,
-        meta,
-        label,
-        kind: 'chapter',
-      }));
-    });
-
-    storyMobileTocList.innerHTML = '';
-    toc.forEach(link => {
-      storyMobileTocList.appendChild(createStoryInfoLink({
-        href: link.href,
-        label: link.textContent?.trim() ?? '',
-        level: link.dataset.level,
-        kind: 'toc',
-      }));
-    });
-    storyMobileToc.hidden = bibliography || toc.length === 0;
-    if (bibliography) {
-      storyMobileTocTrigger?.setAttribute('aria-expanded', 'false');
-    }
-  };
-
-  function activateStoryTab(key: string) {
-    tabs.forEach(tab => {
-      const active = tab.dataset.storyTab === key;
-      tab.classList.toggle('active', active);
-      tab.setAttribute('aria-selected', String(active));
-    });
-    panels.forEach(panel => {
-      panel.classList.toggle('active', panel.dataset.storyPanel === key);
-    });
-    renderStoryMobileInfo();
-  }
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => activateStoryTab(tab.dataset.storyTab ?? 'bibliography'));
-  });
-
   const tagIndex = document.querySelector<HTMLElement>('[data-story-tag-index]');
   const tagResults = document.querySelector<HTMLElement>('[data-story-tag-results]');
   const tagResultsTitle = tagResults?.querySelector<HTMLElement>('[data-story-tag-results-title]');
   const tagResultsCount = tagResults?.querySelector<HTMLElement>('[data-story-tag-results-count]');
   const selectedStoryTags = tagResults?.querySelector<HTMLElement>('[data-story-selected-tags]');
   const tagResultsEmpty = tagResults?.querySelector<HTMLElement>('[data-story-tag-results-empty]');
+  const tagResultsClose = tagResults?.querySelector<HTMLButtonElement>('[data-story-tag-results-close]');
   const selectedTags = new Map<string, string>();
+
   const closeTagMenus = () => {
     document.querySelectorAll<HTMLButtonElement>('[data-story-tag-menu-trigger]').forEach(button => {
       button.setAttribute('aria-expanded', 'false');
     });
   };
-  const closeStoryMobilePanels = (except?: 'chapters' | 'tags' | 'toc' | 'copy') => {
-    if (except !== 'chapters') storyChaptersTrigger?.setAttribute('aria-expanded', 'false');
-    if (except !== 'tags') storyMobileTagsTrigger?.setAttribute('aria-expanded', 'false');
-    if (except !== 'toc') storyMobileTocTrigger?.setAttribute('aria-expanded', 'false');
-    if (except !== 'copy') storyMobileCopyTrigger?.setAttribute('aria-expanded', 'false');
-  };
+
   const updateStoryTagResults = () => {
     if (!tagResults) return;
     const selected = Array.from(selectedTags.keys());
@@ -905,13 +290,11 @@ const seriesUrl = url(`/story/${series.slug}`);
     });
 
     tagResults.querySelectorAll<HTMLElement>('[data-story-result-group]').forEach(group => {
-      const visible = Boolean(group.querySelector('[data-story-result-entry]:not([hidden])'));
-      group.hidden = !visible;
+      group.hidden = !group.querySelector('[data-story-result-entry]:not([hidden])');
     });
 
     tagResults.querySelectorAll<HTMLElement>('[data-story-result-part]').forEach(part => {
-      const visible = Boolean(part.querySelector('[data-story-result-group]:not([hidden])'));
-      part.hidden = !visible;
+      part.hidden = !part.querySelector('[data-story-result-group]:not([hidden])');
     });
 
     if (tagResultsCount) tagResultsCount.textContent = `${visibleCount}개 문서`;
@@ -921,7 +304,6 @@ const seriesUrl = url(`/story/${series.slug}`);
       button.classList.toggle('active', selectedTags.has(button.dataset.storyTagSelect ?? ''));
     });
     closeTagMenus();
-    closeStoryMobilePanels();
   };
 
   tagIndex?.addEventListener('click', event => {
@@ -941,26 +323,6 @@ const seriesUrl = url(`/story/${series.slug}`);
     if (selectedTags.has(tag)) selectedTags.delete(tag);
     else selectedTags.set(tag, tagButton.dataset.storyTagLabel ?? tag);
     updateStoryTagResults();
-    tagResults?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  });
-
-  storyMobileTagsTrigger?.addEventListener('click', event => {
-    event.stopPropagation();
-    const open = storyMobileTagsTrigger.getAttribute('aria-expanded') === 'true';
-    closeStoryMobilePanels();
-    storyMobileTagsTrigger.setAttribute('aria-expanded', String(!open));
-  });
-
-  storyMobileTagsPanel?.addEventListener('click', event => {
-    event.stopPropagation();
-    const tagButton = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-story-tag-select]');
-    if (!tagButton) return;
-    const tag = tagButton.dataset.storyTagSelect;
-    if (!tag) return;
-    if (selectedTags.has(tag)) selectedTags.delete(tag);
-    else selectedTags.set(tag, tagButton.dataset.storyTagLabel ?? tag);
-    updateStoryTagResults();
-    tagResults?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
   selectedStoryTags?.addEventListener('click', event => {
@@ -975,158 +337,9 @@ const seriesUrl = url(`/story/${series.slug}`);
     updateStoryTagResults();
   });
 
-  document.querySelectorAll<HTMLButtonElement>('[data-story-open-part]').forEach(button => {
-    button.addEventListener('click', () => {
-      const partSlug = button.dataset.storyOpenPart ?? 'bibliography';
-      const entryId = button.dataset.storyEntryId;
-      activateStoryTab(partSlug);
-      if (entryId) selectStoryEntry(partSlug, entryId);
-    });
-  });
-
-  document.querySelectorAll<HTMLElement>('.ol-story-chapters-dropdown').forEach(dropdown => {
-    const trigger = dropdown.querySelector<HTMLButtonElement>('button');
-    const panel = dropdown.querySelector<HTMLElement>('.ol-story-chapters-panel');
-    if (!trigger || !panel) return;
-
-    trigger.addEventListener('click', event => {
-      event.stopPropagation();
-      const open = trigger.getAttribute('aria-expanded') === 'true';
-      trigger.setAttribute('aria-expanded', String(!open));
-    });
-
-    panel.addEventListener('click', event => {
-      if ((event.target as HTMLElement).closest('[data-story-select-entry]')) {
-        trigger.setAttribute('aria-expanded', 'false');
-      }
-    });
-  });
-
-  storyChaptersTrigger?.addEventListener('click', event => {
-    event.stopPropagation();
-    const open = storyChaptersTrigger.getAttribute('aria-expanded') === 'true';
-    closeStoryMobilePanels();
-    storyChaptersTrigger.setAttribute('aria-expanded', String(!open));
-  });
-
-  storyChaptersPanel?.addEventListener('click', event => {
-    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-story-select-entry]');
-    if (target) {
-      const partSlug = target.getAttribute('data-story-part');
-      const entryId = target.getAttribute('data-story-select-entry');
-      if (partSlug && entryId) {
-        event.preventDefault();
-        if (getActivePartSlug() !== partSlug) activateStoryTab(partSlug);
-        selectStoryEntry(partSlug, entryId);
-        storyChaptersTrigger?.setAttribute('aria-expanded', 'false');
-      }
-    }
-    event.stopPropagation();
-  });
-
-  document.querySelectorAll<HTMLElement>('[data-story-toc-dropdown]').forEach(dropdown => {
-    const trigger = dropdown.querySelector<HTMLButtonElement>('button');
-    if (!trigger) return;
-    trigger.addEventListener('click', event => {
-      event.stopPropagation();
-      const open = trigger.getAttribute('aria-expanded') === 'true';
-      trigger.setAttribute('aria-expanded', String(!open));
-    });
-  });
-
-  document.addEventListener('click', event => {
-    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-story-select-entry]');
-    if (!target) return;
-    const partSlug = target.getAttribute('data-story-part');
-    const entryId = target.getAttribute('data-story-select-entry');
-    if (!partSlug || !entryId) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (getActivePartSlug() !== partSlug) activateStoryTab(partSlug);
-    selectStoryEntry(partSlug, entryId);
-    target.closest<HTMLElement>('.ol-story-chapters-panel')?.previousElementSibling?.setAttribute('aria-expanded', 'false');
-    if (target.closest('.ol-story-mobile-chapters-panel')) {
-      storyChaptersTrigger?.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  document.addEventListener('click', event => {
-    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-story-nav-entry]');
-    if (!target) return;
-    const partSlug = target.getAttribute('data-story-nav-part');
-    const entryId = target.getAttribute('data-story-nav-entry');
-    if (!partSlug || !entryId) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (getActivePartSlug() !== partSlug) activateStoryTab(partSlug);
-    selectStoryEntry(partSlug, entryId);
-    const activeEntry = document.querySelector<HTMLElement>(`[data-story-entry="${entryId}"]`);
-    activeEntry?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-
-  document.querySelectorAll<HTMLElement>('[data-copy-dropdown]').forEach(copyDropdown => {
-    const copyTrigger = copyDropdown.querySelector<HTMLButtonElement>('.ol-text-tool-btn');
-    const copyPanel = copyDropdown.querySelector<HTMLElement>('.ol-copy-panel');
-    const title = copyDropdown.dataset.copyTitle ?? document.title;
-    const href = new URL(copyDropdown.dataset.copyUrl ?? window.location.pathname, window.location.origin).href;
-    if (!copyTrigger || !copyPanel) return;
-
-    copyTrigger.addEventListener('click', event => {
-      event.stopPropagation();
-      const open = copyTrigger.getAttribute('aria-expanded') === 'true';
-      copyTrigger.setAttribute('aria-expanded', String(!open));
-    });
-
-    copyPanel.addEventListener('click', async event => {
-      event.stopPropagation();
-      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-copy-kind]');
-      if (!button) return;
-      const value = button.dataset.copyKind === 'markdown' ? getActiveStoryMarkdown(title) : href;
-      await navigator.clipboard?.writeText(value);
-      const original = button.textContent ?? '';
-      button.textContent = '복사됨';
-      copyTrigger.setAttribute('aria-expanded', 'false');
-      window.setTimeout(() => { button.textContent = original; }, 1200);
-    });
-  });
-
-  storyMobileTocTrigger?.addEventListener('click', event => {
-    event.stopPropagation();
-    const open = storyMobileTocTrigger.getAttribute('aria-expanded') === 'true';
-    closeStoryMobilePanels();
-    storyMobileTocTrigger.setAttribute('aria-expanded', String(!open));
-  });
-
-  storyMobileTocPanel?.addEventListener('click', event => {
-    event.stopPropagation();
-  });
-
-  storyMobileTocPanel?.addEventListener('click', event => {
-    if ((event.target as HTMLElement).closest('a')) {
-      storyMobileTocTrigger?.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  storyMobileCopyTrigger?.addEventListener('click', event => {
-    event.stopPropagation();
-    const open = storyMobileCopyTrigger.getAttribute('aria-expanded') === 'true';
-    closeStoryMobilePanels();
-    storyMobileCopyTrigger.setAttribute('aria-expanded', String(!open));
-  });
-
-  storyMobileCopyPanel?.addEventListener('click', async event => {
-    event.stopPropagation();
-    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-mobile-copy-kind]');
-    if (!button) return;
-    const kind = button.dataset.mobileCopyKind;
-    const title = storyMobileCopy?.dataset.seriesTitle ?? document.title.replace(' — OL STORY', '');
-    const storyUrl = new URL(storyMobileCopy?.dataset.seriesUrl ?? window.location.pathname, window.location.origin).href;
-    const value = kind === 'markdown' ? getActiveStoryMarkdown(title) : storyUrl;
-    await navigator.clipboard?.writeText(value);
-    const original = button.textContent ?? '';
-    button.textContent = '복사됨';
-    storyMobileCopyTrigger?.setAttribute('aria-expanded', 'false');
-    window.setTimeout(() => { button.textContent = original; }, 1200);
+  tagResultsClose?.addEventListener('click', () => {
+    if (tagResults) tagResults.hidden = true;
+    closeTagMenus();
   });
 
   document.querySelectorAll<HTMLElement>('[data-story-mobile-collapsible]').forEach(card => {
@@ -1135,10 +348,6 @@ const seriesUrl = url(`/story/${series.slug}`);
       const collapsed = card.dataset.mobileCollapsed !== 'false';
       card.dataset.mobileCollapsed = collapsed ? 'false' : 'true';
       button?.setAttribute('aria-expanded', String(collapsed));
-      if (button) {
-        const title = card.querySelector<HTMLElement>('.ol-story-biblio-card-head h2')?.textContent?.trim() ?? '카드';
-        button.setAttribute('aria-label', `${title} ${collapsed ? '접기' : '펼치기'}`);
-      }
     };
 
     card.addEventListener('click', event => {
@@ -1153,25 +362,5 @@ const seriesUrl = url(`/story/${series.slug}`);
     });
   });
 
-  renderStoryMobileInfo();
-  document.querySelectorAll<HTMLElement>('[data-story-part-panel]').forEach(panel => {
-    const partSlug = panel.dataset.storyPartPanel;
-    if (!partSlug) return;
-    renderPartEntry(partSlug);
-    renderPartToc(partSlug);
-  });
-
-  document.addEventListener('click', () => {
-    document.querySelectorAll<HTMLButtonElement>('[data-story-toc-dropdown] button').forEach(button => {
-      button.setAttribute('aria-expanded', 'false');
-    });
-    document.querySelectorAll<HTMLButtonElement>('.ol-story-chapters-dropdown button').forEach(button => {
-      button.setAttribute('aria-expanded', 'false');
-    });
-    document.querySelectorAll<HTMLButtonElement>('[data-copy-dropdown] > button').forEach(button => {
-      button.setAttribute('aria-expanded', 'false');
-    });
-    closeTagMenus();
-    closeStoryMobilePanels();
-  });
+  document.addEventListener('click', closeTagMenus);
 </script>

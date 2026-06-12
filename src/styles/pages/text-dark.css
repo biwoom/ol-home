@@ -154,9 +154,19 @@
 }
 
 .dark .ol-text-tag-menu-panel button:hover,
-.dark .ol-text-tag-menu-panel button.active,
+.dark .ol-text-tag-menu-panel button.active {
+  background: var(--ol-ink);
+  color: var(--ol-surface);
+}
+
 .dark .ol-text-tag-result-group a:hover {
-  background: var(--ol-surface-3);
+  background: #ffffff;
+  color: #111111;
+}
+
+.dark .ol-text-tag-result-group a:hover span,
+.dark .ol-text-tag-result-group a:hover strong {
+  color: inherit;
 }
 
 .dark .ol-text-tag-result-list section {
@@ -174,4 +184,3 @@
     background: var(--ol-surface);
   }
 }
-

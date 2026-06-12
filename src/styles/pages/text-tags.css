@@ -240,13 +240,14 @@
   width: 100%;
   padding: 10px;
   border-radius: 10px;
+  background: var(--ol-surface);
   color: var(--ol-ink-2);
   text-decoration: none;
 }
 
 .ol-text-tag-result-group a:hover {
-  background: var(--ol-surface);
-  color: var(--ol-ink);
+  background: var(--ol-ink);
+  color: var(--ol-surface);
 }
 
 .ol-text-tag-result-group a span {
