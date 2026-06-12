@@ -1,0 +1,86 @@
+/* ============================================================
+   OL TEXT — 반응형 (기본 CSS 이후에 위치해야 올바르게 적용됨)
+   ============================================================ */
+
+/* Works Tablet (1100px 이하): TOC 숨김 */
+@media (max-width: 1100px) {
+  .ol-text-layout--toc { grid-template-columns: 1fr; }
+  .ol-text-toc { display: none; }
+}
+
+/* Works Mobile (900px 이하): 드로어 오버레이 */
+@media (max-width: 900px) {
+  /* 외부 래퍼: 단순 블록 */
+  .ol-text-outer {
+    display: block;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* 목차 바 표시, 사이드바 내부 토글 숨김, 드로어 닫기 표시 */
+  .ol-sidebar-toggle { display: flex; }
+  .ol-text-sidebar-toggle { display: none; }
+  .ol-text-drawer-close { display: flex; margin-left: auto; }
+
+  /* 헤더: 데스크탑 토글 공간(44px) 제거, 닫기 버튼이 우측 끝에 닿도록 */
+  .ol-text-sidebar-header {
+    padding-right: 16px;
+  }
+  .ol-text-toc { display: none; }
+
+  /* 본문 레이아웃: 단일 컬럼, 전체 폭 */
+  .ol-text-layout,
+  .ol-text-layout--toc {
+    display: block;
+    width: 100%;
+    min-height: auto;
+  }
+
+  /* 사이드바: 왼쪽에서 슬라이드되는 드로어 */
+  .ol-text-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    min-width: 0;
+    z-index: 200;
+    background: var(--ol-bg);
+    border-right: 1px solid var(--ol-border);
+    transform: translateX(0);
+    transition: transform 250ms ease, box-shadow 250ms ease;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  }
+
+  /* 닫힌 상태: 완전히 숨김 */
+  [data-text-sidebar="closed"] .ol-text-sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  /* 모바일에서는 열렸을 때 콘텐츠가 보여야 하므로 숨김 해제 */
+  [data-text-sidebar="closed"] .ol-text-sidebar .ol-text-sidebar-title,
+  [data-text-sidebar="closed"] .ol-text-sidebar .ol-text-sidebar-count {
+    display: flex;
+  }
+  [data-text-sidebar="closed"] .ol-text-sidebar .ol-text-sidebar-scroll {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .ol-text-main {
+    padding: 32px 20px;
+  }
+}
+
+/* Works Small Mobile (600px 이하) */
+@media (max-width: 600px) {
+  .ol-text-main { padding: 24px 16px; }
+  .ol-text-sidebar-title {
+    margin-top: 20px;
+    padding: 10px 10px;
+  }
+  .ol-text-sidebar-count { margin-left: 10px; }
+  /* .ol-text-drawer-close { align-items: right;} */
+}
+

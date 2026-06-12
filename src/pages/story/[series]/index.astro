@@ -341,8 +341,10 @@ const seriesUrl = url(`/story/${series.slug}`);
                 <span class="ol-kicker">Contents</span>
                 <h2 class="ol-kr">문서목록</h2>
               </div>
-              <button class="ol-story-biblio-toggle" type="button" aria-expanded="false" data-story-biblio-toggle>
-                <span>펼치기</span>
+              <button class="ol-story-biblio-toggle" type="button" aria-expanded="false" aria-label="문서목록 펼치기" data-story-biblio-toggle>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
               </button>
             </div>
             <div class="ol-story-biblio-card-content">
@@ -377,8 +379,10 @@ const seriesUrl = url(`/story/${series.slug}`);
                 <span class="ol-kicker">Metadata</span>
                 <h2 class="ol-kr">서지정보</h2>
               </div>
-              <button class="ol-story-biblio-toggle" type="button" aria-expanded="false" data-story-biblio-toggle>
-                <span>펼치기</span>
+              <button class="ol-story-biblio-toggle" type="button" aria-expanded="false" aria-label="서지정보 펼치기" data-story-biblio-toggle>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
               </button>
             </div>
 
@@ -437,6 +441,40 @@ const seriesUrl = url(`/story/${series.slug}`);
                 <div>
                   <span class="ol-kicker">PART {partIndex + 1}</span>
                   <h2 class="ol-kr">{part.label}</h2>
+                  <div class="ol-story-active-doc-meta-list">
+                    {part.groups.flatMap(group => group.entries.map(entry => (
+                      <div class="ol-story-active-doc-meta" data-story-head-entry={entry.id} hidden={entry.id !== part.entries[0]?.id}>
+                        {/* <h3 class="ol-kr">{entry.data.title}</h3> */}
+                        <div class="ol-story-active-doc-actions">
+                          <div class="ol-text-doc-meta">
+                            <span class={`ol-text-status ol-text-status--${entry.data.status ?? 'draft'}`}>
+                              {statusLabel[entry.data.status ?? 'draft']}
+                            </span>
+                            <span class="ol-mono-label">
+                              {new Date(entry.data.publishedAt).toLocaleDateString('ko-KR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        {entry.data.tags.length > 0 && (
+                          <div class="ol-story-active-doc-tags">
+                            {entry.data.tags.map(tag => {
+                              const parsed = formatStoryTag(tag);
+                              return (
+                                <span class="ol-text-tag" title={(entry.data.tagAliases[tag] ?? []).join(', ')}>
+                                  <span>{parsed.prefix}</span>
+                                  <strong>{parsed.label}</strong>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )))}
+                  </div>
                 </div>
                 <div class="ol-story-part-tools">
                   <div class="ol-story-chapters-dropdown">
@@ -682,6 +720,9 @@ const seriesUrl = url(`/story/${series.slug}`);
     panel.querySelectorAll<HTMLElement>('[data-story-entry]').forEach(entry => {
       const active = entry.dataset.storyEntry === selectedEntryId;
       entry.classList.toggle('active', active);
+    });
+    document.querySelectorAll<HTMLElement>(`.ol-story-reader-panel[data-story-panel="${partSlug}"] [data-story-head-entry]`).forEach(entry => {
+      entry.toggleAttribute('hidden', entry.dataset.storyHeadEntry !== selectedEntryId);
     });
     panel.querySelectorAll<HTMLElement>('[data-story-group]').forEach(group => {
       const hasActive = Boolean(group.querySelector('[data-story-entry].active'));
@@ -1088,15 +1129,27 @@ const seriesUrl = url(`/story/${series.slug}`);
     window.setTimeout(() => { button.textContent = original; }, 1200);
   });
 
-  document.querySelectorAll<HTMLButtonElement>('[data-story-biblio-toggle]').forEach(button => {
-    button.addEventListener('click', () => {
-      const card = button.closest<HTMLElement>('[data-story-mobile-collapsible]');
-      if (!card) return;
+  document.querySelectorAll<HTMLElement>('[data-story-mobile-collapsible]').forEach(card => {
+    const button = card.querySelector<HTMLButtonElement>('[data-story-biblio-toggle]');
+    const toggleCard = () => {
       const collapsed = card.dataset.mobileCollapsed !== 'false';
       card.dataset.mobileCollapsed = collapsed ? 'false' : 'true';
-      button.setAttribute('aria-expanded', String(collapsed));
-      const label = button.querySelector('span');
-      if (label) label.textContent = collapsed ? '접기' : '펼치기';
+      button?.setAttribute('aria-expanded', String(collapsed));
+      if (button) {
+        const title = card.querySelector<HTMLElement>('.ol-story-biblio-card-head h2')?.textContent?.trim() ?? '카드';
+        button.setAttribute('aria-label', `${title} ${collapsed ? '접기' : '펼치기'}`);
+      }
+    };
+
+    card.addEventListener('click', event => {
+      const target = event.target as HTMLElement;
+      if (target.closest('.ol-story-biblio-card-content button, .ol-story-biblio-card-content a')) return;
+      toggleCard();
+    });
+
+    button?.addEventListener('click', event => {
+      event.stopPropagation();
+      toggleCard();
     });
   });
 

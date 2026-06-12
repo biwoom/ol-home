@@ -1,0 +1,52 @@
+/* ===== AI page ===== */
+.ol-principle {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 20px;
+  padding: 26px 0;
+  border-top: 1px solid var(--ol-border);
+}
+.ol-principle:first-child { border-top: none; }
+.ol-principle .num {
+  font-size: 30px;
+  color: var(--ol-ink);
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.ol-principle h4 { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; }
+.ol-principle p { color: var(--ol-muted); margin: 8px 0 0; font-size: 14.5px; line-height: 1.65; }
+
+.ol-timeline {
+  position: relative;
+  padding-left: 28px;
+}
+.ol-timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px; top: 4px; bottom: 4px;
+  width: 1px;
+  background: var(--ol-border);
+}
+.ol-timeline-item {
+  position: relative;
+  padding: 16px 0;
+}
+.ol-timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -28px; top: 22px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--ol-surface);
+  border: 1.5px solid var(--ol-border-strong);
+}
+.ol-timeline-item.now::before {
+  background: var(--ol-ink);
+  border-color: var(--ol-ink);
+  box-shadow: 0 0 0 4px var(--ol-surface-2);
+}
+.ol-timeline-item h4 { font-size: 15px; font-weight: 600; }
+.ol-timeline-item .when { font-family: var(--ol-font-mono); font-size: 11px; color: var(--ol-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.ol-timeline-item p { color: var(--ol-muted); font-size: 13.5px; margin: 4px 0 0; line-height: 1.6; }
+

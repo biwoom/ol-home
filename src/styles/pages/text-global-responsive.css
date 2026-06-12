@@ -1,0 +1,61 @@
+/* ============================================================
+   Responsive: Mobile & Tablet (통합)
+   ============================================================ */
+
+/* Tablet & Large Mobile: 1100px 이하 */
+@media (max-width: 1100px) {
+  /* Works: TOC 숨김 */
+  .ol-text-layout--toc {
+    grid-template-columns: 1fr;
+  }
+  .ol-text-toc { display: none; }
+}
+
+/* Tablet & Mobile: 900px 이하 */
+@media (max-width: 900px) {
+  /* ── 일반 레이아웃 ── */
+  .ol-grid-3, .ol-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .ol-grid-2 { grid-template-columns: 1fr; }
+  .ol-hero h1 { font-size: 40px; }
+  .ol-footer-grid { grid-template-columns: 1fr 1fr; }
+  .ol-nav { display: none; }
+  .ol-post { grid-template-columns: 1fr; }
+  .ol-stats { grid-template-columns: 1fr 1fr; }
+  .ol-stat { border-left: none; border-top: 1px solid var(--ol-border); }
+  .ol-stat:first-child, .ol-stat:nth-child(2) { border-top: none; }
+  .ol-container { padding: 0 20px; }
+  .ol-entity-list { grid-template-columns: repeat(2, 1fr); }
+  .ol-section-grid-2 { grid-template-columns: 1fr; }
+  .ol-section-grid-sidebar { grid-template-columns: 1fr; }
+
+  /* ── 헤더: 모바일 메뉴 ── */
+  .ol-mobile-menu-trigger { display: flex; }
+  .ol-header-right .ol-btn-outline,
+  .ol-header-right .ol-btn-primary { display: none; }
+  .ol-header-right { gap: 4px; }
+}
+
+/* Small Mobile: 600px 이하 */
+@media (max-width: 600px) {
+  /* ── 일반 레이아웃 ── */
+  .ol-grid-3, .ol-grid-4 { grid-template-columns: 1fr; }
+  .ol-hero { padding: 64px 0 40px; }
+  .ol-hero h1 { font-size: 40px; line-height: 50px;}
+  .ol-stats { grid-template-columns: 1fr 1fr; }
+  .ol-entity-list { grid-template-columns: 1fr; }
+
+  /* ── Search: 전체 화면 모달 ── */
+  .ol-search-overlay { padding-top: 0; align-items: stretch; }
+  .ol-search-modal {
+    width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+/* Desktop Only: 901px 이상 */
+@media (min-width: 901px) {
+  /* 모바일 메뉴 완전 숨김 */
+  .ol-mobile-overlay { display: none !important; }
+}

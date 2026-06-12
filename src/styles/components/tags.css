@@ -1,0 +1,39 @@
+.ol-text-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid #e6e0d8;
+  border-radius: 999px;
+  background: #fff;
+  color: #5d5852;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.ol-text-tag span {
+  color: #9a9288;
+  font-family: var(--ol-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ol-text-tag strong {
+  font-weight: 600;
+}
+
+.dark .ol-text-tag {
+  border-color: var(--ol-border-strong);
+  background: var(--ol-surface);
+  color: var(--ol-ink-2);
+}
+
+.dark .ol-text-tag span {
+  color: var(--ol-muted);
+}
+
+.dark .ol-text-tag strong {
+  color: var(--ol-ink);
+}

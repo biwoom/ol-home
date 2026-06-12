@@ -1,0 +1,82 @@
+/* ===== Entity page styles ===== */
+.ol-entity-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--ol-border);
+}
+.ol-entity-header h1 {
+  font-size: 42px;
+  margin-top: 8px;
+  letter-spacing: -0.03em;
+}
+.ol-entity-names {
+  color: var(--ol-muted);
+  font-size: 15px;
+  margin-top: 8px;
+  font-family: var(--ol-font-mono);
+}
+.ol-backlinks {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ol-border);
+}
+.ol-backlinks ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ol-backlinks li a {
+  color: var(--ol-ink);
+  text-decoration: none;
+  font-size: 14px;
+  border-bottom: 1px solid var(--ol-border);
+  padding-bottom: 1px;
+}
+.ol-backlinks li a:hover { border-color: var(--ol-ink); }
+.ol-relation-links {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ol-border);
+}
+.ol-relation-links ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ol-relation-links li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+.ol-relation-predicate {
+  font-family: var(--ol-font-mono);
+  font-size: 11px;
+  color: var(--ol-muted);
+  background: var(--ol-surface-2);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.ol-entity-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.ol-entity-card {
+  background: var(--ol-surface);
+  border: 1px solid var(--ol-border);
+  border-radius: var(--ol-r);
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: border 160ms, transform 160ms;
+}
+.ol-entity-card:hover { border-color: var(--ol-ink); transform: translateY(-1px); }
+.ol-entity-card h4 { font-size: 15px; font-weight: 600; margin-top: 6px; }
+.ol-entity-card p { color: var(--ol-muted); font-size: 13px; margin-top: 4px; line-height: 1.5; }

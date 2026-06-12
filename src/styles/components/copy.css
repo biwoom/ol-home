@@ -1,0 +1,98 @@
+.ol-text-tool-btn {
+  height: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid #e4ded6;
+  border-radius: 999px;
+  background: #fff;
+  color: #4c4640;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.ol-text-tool-label {
+  display: inline;
+}
+
+.ol-text-tool-btn:hover,
+.ol-text-toc-dropdown button[aria-expanded="true"] {
+  border-color: #cbc2b8;
+  background: #fbfaf8;
+}
+
+.ol-copy-dropdown {
+  position: relative;
+}
+
+.ol-copy-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 34;
+  min-width: 168px;
+  padding: 6px;
+  border: 1px solid #e3ddd5;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(42, 35, 28, 0.12);
+}
+
+.ol-copy-dropdown > button[aria-expanded="true"] + .ol-copy-panel {
+  display: block;
+}
+
+.ol-copy-panel button {
+  width: 100%;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #625b53;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+
+.ol-copy-panel button:hover {
+  background: #f4f0eb;
+  color: #211e1a;
+}
+
+.dark .ol-copy-panel,
+.dark .ol-text-tool-btn {
+  border-color: var(--ol-border);
+  background: var(--ol-surface);
+}
+
+.dark .ol-text-tool-btn {
+  color: var(--ol-ink-2);
+}
+
+.dark .ol-text-tool-btn:hover,
+.dark .ol-text-toc-dropdown button[aria-expanded="true"] {
+  background: var(--ol-surface-2);
+  color: var(--ol-ink);
+}
+
+.dark .ol-copy-panel {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+}
+
+.dark .ol-copy-panel button {
+  color: var(--ol-ink-2);
+}
+
+.dark .ol-copy-panel button:hover {
+  background: var(--ol-surface-2);
+  color: var(--ol-ink);
+}

@@ -1,0 +1,41 @@
+/* ===== Footer ===== */
+.ol-footer {
+  border-top: 1px solid var(--ol-border);
+  padding: 48px 0 32px;
+  margin-top: auto;
+  background: var(--ol-bg);
+}
+.ol-footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 32px;
+}
+.ol-footer h4 {
+  font-size: 12px;
+  font-family: var(--ol-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ol-muted);
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+.ol-footer a {
+  display: block;
+  color: var(--ol-ink-2);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 4px 0;
+}
+.ol-footer a:hover { color: var(--ol-ink); }
+.ol-footer-bottom {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ol-border);
+  display: flex;
+  justify-content: space-between;
+  color: var(--ol-muted);
+  font-size: 12.5px;
+  font-family: var(--ol-font-mono);
+  letter-spacing: 0.02em;
+}
+

@@ -1,0 +1,79 @@
+/* ===== Blog ===== */
+.ol-post {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  padding: 28px 0;
+  border-top: 1px solid var(--ol-border);
+  align-items: start;
+}
+.ol-post:first-child { border-top: none; }
+.ol-post--text-only {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+.ol-post .when {
+  font-family: var(--ol-font-mono);
+  font-size: 12px;
+  color: var(--ol-muted);
+  letter-spacing: 0.06em;
+}
+.ol-post h3 {
+  font-size: 24px;
+  letter-spacing: -0.025em;
+  margin: 8px 0;
+  font-weight: 700;
+}
+.ol-post p { color: var(--ol-ink-2); font-size: 14.5px; line-height: 1.65; max-width: 64ch; }
+.ol-post .meta { margin-top: 12px; display: flex; gap: 12px; color: var(--ol-muted); font-size: 12.5px; }
+.ol-post a.read {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ol-ink);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--ol-ink);
+  padding-bottom: 1px;
+  align-self: flex-start;
+}
+.ol-post-title-link {
+  text-decoration: none;
+  color: inherit;
+  transition: color 120ms;
+}
+.ol-post-title-link:hover { color: var(--ol-ink-2); }
+.ol-post-title-link h3 { margin: 8px 0; }
+
+.ol-blog-archive-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ol-blog-archive-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-radius: var(--ol-r-sm, 5px);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ol-ink-2);
+  transition: background 120ms, color 120ms;
+}
+.ol-blog-archive-count {
+  font-family: var(--ol-font-mono);
+  font-size: 12px;
+  color: var(--ol-muted);
+}
+.ol-blog-archive-btn:hover { background: var(--ol-surface-2); color: var(--ol-ink); }
+.ol-blog-archive-btn.active { background: var(--ol-ink); color: var(--ol-bg); }
+.ol-blog-archive-btn.active .ol-blog-archive-count { color: rgba(255,255,255,0.5); }
+

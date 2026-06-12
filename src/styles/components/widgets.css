@@ -1,0 +1,65 @@
+/* ===== Stats ===== */
+.ol-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--ol-border);
+  border-radius: var(--ol-r);
+  background: var(--ol-surface);
+  overflow: hidden;
+}
+.ol-stat { padding: 24px 28px; border-left: 1px solid var(--ol-border); }
+.ol-stat:first-child { border-left: none; }
+.ol-stat .n { font-size: 34px; letter-spacing: -0.03em; color: var(--ol-ink); font-weight: 700; }
+.ol-stat .n em { font-style: normal; }
+.ol-stat .l { font-family: var(--ol-font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ol-muted); margin-top: 4px; }
+
+/* ===== Manifest box ===== */
+.ol-manifest {
+  background: var(--ol-ink);
+  color: var(--ol-bg);
+  border-radius: var(--ol-r-lg);
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.ol-manifest::before {
+  content: "OL";
+  position: absolute;
+  font-size: 480px;
+  font-weight: 800;
+  right: -60px;
+  bottom: -180px;
+  color: rgba(255,255,255,0.04);
+  line-height: 0.8;
+  pointer-events: none;
+  letter-spacing: -0.05em;
+}
+.ol-manifest .ol-kicker { color: rgba(255,255,255,0.5); }
+.ol-manifest h3 { color: var(--ol-bg); font-size: 32px; line-height: 1.3; max-width: 29ch; margin-top: 14px; font-weight: 700; letter-spacing: -0.025em; }
+.ol-manifest p { color: rgba(255,255,255,0.65); margin-top: 16px; max-width: 58ch; font-size: 14.5px; line-height: 1.75; }
+
+/* ===== Tab control ===== */
+.ol-tabs {
+  display: inline-flex;
+  background: var(--ol-surface-2);
+  border-radius: var(--ol-r);
+  padding: 4px;
+  gap: 2px;
+}
+.ol-tabs button {
+  height: 30px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ol-muted);
+  font-family: inherit;
+}
+.ol-tabs button.active {
+  background: var(--ol-surface);
+  color: var(--ol-ink);
+  box-shadow: var(--ol-shadow-sm);
+}
+

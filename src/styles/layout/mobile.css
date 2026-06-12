@@ -1,0 +1,35 @@
+/* ===== Page layout ===== */
+.ol-page-main {
+  flex: 1;
+}
+
+/* ===== TASK 11: Dark mode icon visibility ===== */
+html.dark .ol-icon-sun { display: none; }
+html:not(.dark) .ol-icon-moon { display: none; }
+
+/* Smooth theme transition */
+body {
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* ===== Korean text optimization ===== */
+:lang(ko), .ol-kr { word-break: keep-all; }
+
+/* 햄버거 버튼 (데스크탑에서 숨김) */
+.ol-mobile-menu-trigger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--ol-ink);
+  cursor: pointer;
+  border-radius: var(--ol-r);
+  transition: background 100ms ease;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.ol-mobile-menu-trigger:hover { background: var(--ol-surface-2); }
+

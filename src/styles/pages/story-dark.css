@@ -1,0 +1,78 @@
+.dark .ol-story-reader-shell {
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+}
+
+.dark .ol-story-reader-tabs {
+  background: var(--ol-surface-2);
+}
+
+.dark .ol-story-tab:hover {
+  background: var(--ol-surface-3);
+}
+
+.dark .ol-story-tab.active {
+  background: var(--ol-surface);
+}
+
+.dark .ol-story-chapters-panel {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+}
+
+.dark .ol-story-tag-menu-panel,
+.dark .ol-story-tag-results {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+}
+
+.dark .ol-story-tag-menu-panel button:hover,
+.dark .ol-story-tag-menu-panel button.active,
+.dark .ol-story-tag-result-list button:hover {
+  background: var(--ol-surface-3);
+}
+
+.dark .ol-story-mobile-info-panel {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+}
+
+.dark .ol-story-mobile-tags-panel,
+.dark .ol-story-mobile-toc-panel,
+.dark .ol-story-mobile-copy-panel {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+}
+
+.dark .ol-story-mobile-copy-panel button:hover {
+  background: var(--ol-surface-3);
+}
+
+.dark .ol-story-mobile-chapters-panel {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+}
+
+.dark .ol-story-book-cover {
+  background:
+    linear-gradient(160deg, rgba(255,255,255,0.1), transparent 35%),
+    #050505;
+  color: var(--ol-ink);
+}
+
+.dark .ol-story-cover-panel,
+.dark .ol-story-biblio-toc-card,
+.dark .ol-story-biblio-body,
+.dark .ol-story-part-sidebar {
+  background: var(--ol-surface-2);
+}
+
+.dark .ol-story-part-sidebar a:hover,
+.dark .ol-story-part-sidebar button:hover,
+.dark .ol-story-part-sidebar button.active {
+  background: var(--ol-surface-3);
+}
+
+.dark .ol-story-full-toc button {
+  color: var(--ol-ink-2);
+}
+
+.dark .ol-story-full-toc button:hover {
+  background: var(--ol-surface-3);
+  color: var(--ol-ink);
+}
+

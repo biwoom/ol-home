@@ -1,0 +1,32 @@
+/* ============================================================
+   OL STORY — Series reader
+   ============================================================ */
+
+.ol-story-reader-page {
+  width: min(1760px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 86px 0 120px;
+  overflow-x: hidden;
+}
+
+.ol-story-series-hero {
+  max-width: 860px;
+  margin: 0 auto 76px;
+  text-align: center;
+}
+
+.ol-story-series-hero h1 {
+  margin-top: 16px;
+  font-size: clamp(44px, 6vw, 72px);
+  line-height: 1.04;
+  letter-spacing: 0;
+}
+
+.ol-story-series-hero p {
+  max-width: 720px;
+  margin: 22px auto 0;
+  color: var(--ol-muted);
+  font-size: 18px;
+  line-height: 1.7;
+}
+

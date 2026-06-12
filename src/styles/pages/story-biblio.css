@@ -1,0 +1,231 @@
+.ol-story-biblio-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(280px, 1fr) minmax(260px, 340px);
+  gap: 18px;
+  min-height: 620px;
+  padding: 18px;
+  background: var(--ol-surface-3);
+}
+
+.ol-story-cover-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--ol-border);
+  border-radius: 16px;
+  background: var(--ol-surface-2);
+}
+
+.ol-story-biblio-toc-card,
+.ol-story-biblio-body {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--ol-border);
+  border-radius: 16px;
+  background: var(--ol-surface);
+}
+
+.ol-story-book-cover {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 28px;
+  border: 1px solid var(--ol-border-strong);
+  border-radius: 14px;
+  background:
+    linear-gradient(160deg, rgba(255,255,255,0.08), transparent 35%),
+    var(--ol-ink);
+  color: var(--ol-bg);
+}
+
+.ol-story-book-cover span,
+.ol-story-book-cover em {
+  font-family: var(--ol-font-mono);
+  font-size: 11px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.ol-story-book-cover strong {
+  max-width: 10ch;
+  font-size: 34px;
+  line-height: 1.14;
+  overflow-wrap: anywhere;
+}
+
+.ol-story-downloads {
+  display: grid;
+  gap: 10px;
+}
+
+.ol-story-biblio-body {
+  align-self: start;
+}
+
+.ol-story-biblio-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.ol-story-biblio-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.ol-story-biblio-toggle {
+  display: none;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--ol-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ol-muted);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ol-story-biblio-toggle:hover {
+  border-color: var(--ol-border-strong);
+  color: var(--ol-ink);
+}
+
+.ol-story-biblio-toggle svg {
+  transition: transform 140ms ease;
+}
+
+.ol-story-biblio-card-head h2,
+.ol-story-biblio-body h2 {
+  margin-top: 8px;
+  font-size: 24px;
+  letter-spacing: 0;
+}
+
+.ol-story-biblio-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 20px 0 0;
+}
+
+.ol-story-biblio-list div {
+  padding: 12px 0;
+  border-top: 1px solid var(--ol-border);
+}
+
+.ol-story-biblio-list dt {
+  color: var(--ol-muted);
+  font-family: var(--ol-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ol-story-biblio-list dd {
+  margin: 6px 0 0;
+  color: var(--ol-ink);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.ol-story-summary {
+  margin-top: 34px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ol-border);
+}
+
+.ol-story-summary h3 {
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.ol-story-summary p {
+  max-width: 72ch;
+  margin-top: 12px;
+  color: var(--ol-ink-2);
+  line-height: 1.75;
+}
+
+.ol-story-full-toc {
+  display: grid;
+  gap: 18px;
+}
+
+.ol-story-full-toc section + section {
+  padding-top: 18px;
+  border-top: 1px solid var(--ol-border);
+}
+
+.ol-story-full-toc h3 {
+  margin: 0 0 12px;
+  color: var(--ol-muted);
+  font-family: var(--ol-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.ol-story-full-toc-group {
+  margin-top: 12px;
+}
+
+.ol-story-full-toc-group p {
+  margin: 0 10px 6px;
+  color: var(--ol-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ol-story-full-toc ol {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.ol-story-full-toc button {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--ol-ink-2);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.ol-story-full-toc button:hover {
+  background: var(--ol-surface-2);
+  color: var(--ol-ink);
+}
+
+.ol-story-full-toc button span {
+  color: var(--ol-muted);
+  font-family: var(--ol-font-mono);
+  font-size: 11px;
+}
+
+.ol-story-full-toc button strong {
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+

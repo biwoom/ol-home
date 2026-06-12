@@ -1,0 +1,38 @@
+.ol-text-status {
+  flex-shrink: 0;
+  font-family: var(--ol-font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.ol-text-status--draft {
+  background: var(--ol-border);
+  color: var(--ol-muted);
+}
+
+.ol-text-status--revising {
+  background: transparent;
+  color: var(--ol-muted);
+  border: 1px solid var(--ol-border);
+}
+
+.ol-text-status--ready,
+.ol-text-status--published {
+  background: var(--ol-ink);
+  color: var(--ol-bg);
+}
+
+.dark .ol-text-status--draft {
+  background: var(--ol-border);
+  color: var(--ol-muted);
+}
+
+.dark .ol-text-status--ready,
+.dark .ol-text-status--published {
+  background: var(--ol-ink);
+  color: var(--ol-bg);
+}
